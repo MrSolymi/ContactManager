@@ -8,6 +8,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using McDContactManager.View;
 
 namespace McDContactManager;
 
@@ -19,5 +20,11 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+    }
+    
+    private void OpenUploadWindow_Click(object sender, RoutedEventArgs e)
+    {
+        var uploadWindow = new UploadWindow();
+        uploadWindow.ShowDialog(); // Modálisan nyílik meg
     }
 }

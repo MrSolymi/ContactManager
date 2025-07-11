@@ -1,0 +1,22 @@
+﻿<Window x:Class="McDContactManager.View.UploadWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:local="clr-namespace:McDContactManager.View"
+        xmlns:vm="clr-namespace:McDContactManager.ViewModel"
+        Title="UploadWindow" Height="450" Width="800">
+    
+    <Window.DataContext>
+        <vm:UploadViewModel />
+    </Window.DataContext>
+    
+    <StackPanel Margin="20">
+        <Button Content="Fájl kiválasztása" 
+                Command="{Binding SelectFileCommand}" 
+                Margin="0 0 0 10"/>
+        <Button Content="Bezárás" 
+                Command="{Binding CloseWindowCommand}"
+                CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"/>
+    </StackPanel>
+</Window>
