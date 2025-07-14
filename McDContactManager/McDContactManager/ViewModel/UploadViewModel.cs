@@ -3,6 +3,7 @@ using System.IO;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Input;
+using McDContactManager.data;
 using McDContactManager.Model;
 using Microsoft.Win32;
 
@@ -40,24 +41,46 @@ public class UploadViewModel
             
             foreach (var split in splits)
             {
+                if (!split.Trim().StartsWith("Tárgy")) continue;
+                
                 var name = Regex.Match(split, @"Név:\s*\*?(.*?)\*?\s*(\r?\n|$)", RegexOptions.IgnoreCase).Groups[1].Value.Trim();
                 var phone = Regex.Match(split, @"Telefon:\s*\*?(.*?)\*?\s*(\r?\n|$)", RegexOptions.IgnoreCase).Groups[1].Value.Trim();
-                var email = Regex.Match(split, @"Email:\s*\*?(.*?)\*?", RegexOptions.IgnoreCase).Groups[1].Value.Trim();
-
-                Console.WriteLine(name);
-                Console.WriteLine(phone);
                 
-                //TODO: itt hasal el az email regexnél
-                
-                Console.WriteLine(email);
+                var emailLineMatch = Regex.Match(split, @"Email:\s*(.*)", RegexOptions.IgnoreCase);
+                var rawEmailLine = emailLineMatch.Groups[1].Value.Trim();
+                var rawSplits = rawEmailLine.Split('*');
+                var email = rawSplits[0] + rawSplits[1].Split(' ')[0].Trim();
 
-                if (!string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(email))
+                if (!string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(email) && !string.IsNullOrEmpty(phone))
                 {
-                    Contacts.Add(new Contact(name, email, phone));
+                    Contacts.Add(new Contact(name, phone, email));
                 }
             }
             
             MessageBox.Show($"Sikeresen beolvasva {Contacts.Count} kontakt.");
+            
+            SaveContactsToDatabase();
+            
+            // using (StreamWriter writer = new StreamWriter("contacts.txt"))
+            // {
+            //     foreach (var contact in Contacts)
+            //     {
+            //         writer.WriteLine(contact);
+            //     }
+            // }
         }
+    }
+
+    private void SaveContactsToDatabase()
+    {
+        using var db = new DatabaseContext();
+        db.Database.EnsureCreated(); // létrehozza, ha még nem létezik
+
+        foreach (var contact in Contacts)
+        {
+            db.Contacts.Add(contact);
+        }
+
+        db.SaveChanges();
     }
 }

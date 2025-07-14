@@ -1,18 +1,33 @@
-﻿namespace McDContactManager.Model;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace McDContactManager.Model;
 
 public class Contact
 {
-    private string Name { get; }
+    [Key]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    public int Id { get; set; }
+    
+    public string Name { get; private set; }
 
-    private string Email { get; }
+    public string Phone { get; private set; }
+    
+    public string Email { get; private set; }
 
-    private string Phone { get; }
-
-    public Contact(string name, string email, string phone)
+    public Contact(string name, string phone, string email)
     {
         Name = name;
-        Email = email;
         Phone = phone;
+        Email = email;
     }
-    
+
+    private Contact()
+    {
+    }
+
+    public override string ToString()
+    {
+        return $"Contact: Name: {Name} Phone: {Phone} Email: {Email}";
+    }
 }
