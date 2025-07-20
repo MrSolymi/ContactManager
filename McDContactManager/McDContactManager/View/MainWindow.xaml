@@ -39,14 +39,17 @@
             <Label Content="Name:" VerticalAlignment="Center"/>
             <TextBox Text="{Binding NameFilter, UpdateSourceTrigger=PropertyChanged}" Width="120" Margin="5,0,15,0"/>
 
-            <Label Content="Date:" VerticalAlignment="Center"/>
-            <DatePicker x:Name="DateFilterPicker" Width="140" Margin="5,0,15,0"/>
-
             <Label Content="Phone:" VerticalAlignment="Center"/>
             <TextBox Text="{Binding PhoneFilter, UpdateSourceTrigger=PropertyChanged}" Width="120" Margin="5,0,15,0"/>
             
             <Label Content="Email:" VerticalAlignment="Center"/>
             <TextBox Text="{Binding EmailFilter, UpdateSourceTrigger=PropertyChanged}" Width="120" Margin="5,0,15,0"/>
+            
+            <Label Content="Date from:" VerticalAlignment="Center"/>
+            <DatePicker SelectedDate="{Binding DateFrom}" Width="140" Margin="5,0,15,0"/>
+            
+            <Label Content="Date to:" VerticalAlignment="Center"/>
+            <DatePicker SelectedDate="{Binding DateTo}" Width="140" Margin="5,0,15,0"/>
         </StackPanel>
 
         <!-- DataGrid -->
@@ -58,7 +61,7 @@
                 <DataGridTextColumn Header="Name" Binding="{Binding Name, Mode=OneWay}" Width="*" CanUserResize="False"/>
                 <DataGridTextColumn Header="Phone" Binding="{Binding Phone, Mode=OneWay}" Width="*" CanUserResize="False"/>
                 <DataGridTextColumn Header="Email" Binding="{Binding Email, Mode=OneWay}" Width="*" CanUserResize="False"/>
-                <DataGridTextColumn Header="Date" Binding="{Binding DateCreated, Mode=OneWay}" Width="*" CanUserResize="False"/>
+                <DataGridTextColumn Header="Date" Binding="{Binding DateCreated, Mode=OneWay, StringFormat='yyyy. MM. dd'}" Width="*" CanUserResize="False"/>
                 <DataGridTextColumn Header="Published" Binding="{Binding Published, Mode=OneWay}" Width="80" CanUserResize="False"/>
                 <DataGridTextColumn Header="Hired" Binding="{Binding Hired, Mode=OneWay}" Width="80" CanUserResize="False"/>
             </DataGrid.Columns>

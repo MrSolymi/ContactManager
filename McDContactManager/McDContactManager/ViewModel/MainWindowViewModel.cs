@@ -48,10 +48,33 @@ public class MainWindowViewModel : INotifyPropertyChanged
         }
     }
     
+    public DateTime? DateFrom
+    {
+        get => _dateFrom;
+        set
+        {
+            _dateFrom = value;
+            OnPropertyChanged(nameof(DateFrom));
+            ApplyFilters();
+        }
+    }
+    
+    public DateTime? DateTo
+    {
+        get => _dateTo;
+        set
+        {
+            _dateTo = value;
+            OnPropertyChanged(nameof(DateTo));
+            ApplyFilters();
+        }
+    }
+    
     private string _nameFilter;
     private string _phoneFilter;
     private string _emailFilter;
-
+    private DateTime? _dateFrom;
+    private DateTime? _dateTo = DateTime.Today;
     public MainWindowViewModel()
     {
         OpenUploadCommand = new RelayCommand(OpenUploadWindow);
@@ -73,6 +96,8 @@ public class MainWindowViewModel : INotifyPropertyChanged
     
     private void LoadContactsFromDatabase()
     {
+        //TODO: handle non existent db
+        
         using var db = new DatabaseContext();
         var contactsFromDb = db.Contacts.ToList();
 
@@ -105,6 +130,15 @@ public class MainWindowViewModel : INotifyPropertyChanged
         if (!string.IsNullOrWhiteSpace(EmailFilter))
         {
             query = query.Where(c => c.Email.Contains(EmailFilter, StringComparison.OrdinalIgnoreCase));
+        }
+        
+        if (DateFrom.HasValue)
+        {
+            query = query.Where(c => c.DateCreated >= DateFrom.Value);
+        }
+        if (DateTo.HasValue)
+        {
+            query = query.Where(c => c.DateCreated <= DateTo.Value);
         }
 
         foreach (var contact in query)

@@ -26,7 +26,7 @@ public partial class Contact
         Name = name;
         Phone = phone;
         Email = email;
-        DateCreated = DateTime.Now;
+        DateCreated = DateTime.Today;
         Published = false;
         Hired = false;
     }
