@@ -1,4 +1,5 @@
-﻿using System.Collections.ObjectModel;
+﻿using System.Collections;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows.Input;
 using McDContactManager.data;
@@ -10,10 +11,12 @@ public class MainWindowViewModel : INotifyPropertyChanged
 {
     public ICommand OpenUploadCommand { get; }
     public ICommand LoadContactsCommand { get; }
+    public RelayCommand MarkPublishedCommand { get; }
     
     public ObservableCollection<Contact> AllContacts { get; } = new();
-    
     public ObservableCollection<Contact> FilteredContacts { get; } = new();
+    public ObservableCollection<Contact> SelectedContacts { get; } = new();
+
     
     public string NameFilter
     {
@@ -79,6 +82,13 @@ public class MainWindowViewModel : INotifyPropertyChanged
     {
         OpenUploadCommand = new RelayCommand(OpenUploadWindow);
         LoadContactsCommand = new RelayCommand(LoadContactsFromDatabase);
+        
+        
+        MarkPublishedCommand = new RelayCommand(ExecuteMarkPublished, CanExecuteMarkPublished);
+        SelectedContacts.CollectionChanged += (s, e) =>
+        {
+            MarkPublishedCommand.RaiseCanExecuteChanged();
+        };
     }
     
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -144,6 +154,39 @@ public class MainWindowViewModel : INotifyPropertyChanged
         foreach (var contact in query)
         {
             FilteredContacts.Add(contact);
+        }
+    }
+    
+    private bool CanExecuteMarkPublished()
+    {
+        return SelectedContacts != null && SelectedContacts.Count > 0;
+    }
+    
+    private void ExecuteMarkPublished()
+    {
+        var selected = SelectedContacts.ToList();
+        
+        if (selected.Count == 0) return;
+
+        using var db = new DatabaseContext();
+
+        foreach (var contact in selected)
+        {
+            var tracked = db.Contacts.FirstOrDefault(c => c.Id == contact.Id);
+            if (tracked != null)
+            {
+                tracked.Published = true;
+            }
+        }
+
+        db.SaveChanges();
+
+        foreach (var contact in FilteredContacts)
+        {
+            if (selected.Any(s => s.Id == contact.Id))
+            {
+                contact.Published = true;
+            }
         }
     }
 }

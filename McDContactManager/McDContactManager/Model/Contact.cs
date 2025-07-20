@@ -1,10 +1,13 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace McDContactManager.Model;
 
-public partial class Contact
+public class Contact : INotifyPropertyChanged
 {
+    private bool _published;
+
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int Id { get; set; }
@@ -16,8 +19,16 @@ public partial class Contact
     public string Email { get; private set; }
 
     public DateTime DateCreated { get; private set; }
-    
-    public bool Published { get; private set; }
+
+    public bool Published
+    {
+        get => _published;
+        set
+        {
+            _published = value;
+            OnPropertyChanged(nameof(Published));
+        }
+    }
 
     public bool Hired { get; private set; }
     
@@ -39,4 +50,8 @@ public partial class Contact
     {
         return $"Contact: Name: {Name} Phone: {Phone} Email: {Email}";
     }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+    protected void OnPropertyChanged(string propertyName)
+        => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 }

@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:McDContactManager"
         xmlns:vm="clr-namespace:McDContactManager.ViewModel"
+        xmlns:behaviors="clr-namespace:McDContactManager.Model"
         mc:Ignorable="d"
         Title="MainWindow" Height="900" Width="1600">
     
@@ -30,7 +31,7 @@
             <Button Content="Upload" Command="{Binding OpenUploadCommand}" Margin="0,0,10,0" Width="80"/>
             <Button Content="Load" Command="{Binding LoadContactsCommand}" Margin="0,0,10,0" Width="80"/>
             <Button x:Name="UpdateButton" Content="Update" Margin="0,0,10,0" Width="80"/>
-            <Button x:Name="MarkPublishedButton" Content="Marked as Published" Margin="0,0,10,0" Width="130"/>
+            <Button Command="{Binding MarkPublishedCommand}" Content="Marked as Published" Margin="0,0,10,0" Width="130"/>
             <Button x:Name="MarkHiredButton" Content="Marked as Hired" Width="120"/>
         </StackPanel>
 
@@ -53,7 +54,7 @@
         </StackPanel>
 
         <!-- DataGrid -->
-        <DataGrid Grid.Row="2" ItemsSource="{Binding FilteredContacts}" AutoGenerateColumns="False" CanUserAddRows="False" SelectionMode="Extended" HeadersVisibility="Column">
+        <DataGrid Grid.Row="2" ItemsSource="{Binding FilteredContacts}" behaviors:SelectedItemsBehavior.BindableSelectedItems="{Binding SelectedContacts}" AutoGenerateColumns="False" CanUserAddRows="False" SelectionMode="Extended" HeadersVisibility="Column" SelectionUnit="FullRow">
             <DataGrid.Columns>
                 <!--
                 <DataGridCheckBoxColumn Header="Select" Binding="{Binding IsSelected}" Width="60"/>
@@ -62,8 +63,8 @@
                 <DataGridTextColumn Header="Phone" Binding="{Binding Phone, Mode=OneWay}" Width="*" CanUserResize="False"/>
                 <DataGridTextColumn Header="Email" Binding="{Binding Email, Mode=OneWay}" Width="*" CanUserResize="False"/>
                 <DataGridTextColumn Header="Date" Binding="{Binding DateCreated, Mode=OneWay, StringFormat='yyyy. MM. dd'}" Width="*" CanUserResize="False"/>
-                <DataGridTextColumn Header="Published" Binding="{Binding Published, Mode=OneWay}" Width="80" CanUserResize="False"/>
-                <DataGridTextColumn Header="Hired" Binding="{Binding Hired, Mode=OneWay}" Width="80" CanUserResize="False"/>
+                <DataGridTextColumn Header="Published" Binding="{Binding Published, Mode=OneWay}" IsReadOnly="True" Width="80" CanUserResize="False"/>
+                <DataGridTextColumn Header="Hired" Binding="{Binding Hired, Mode=OneWay}" IsReadOnly="True" Width="80" CanUserResize="False"/>
             </DataGrid.Columns>
         </DataGrid>
     </Grid>
