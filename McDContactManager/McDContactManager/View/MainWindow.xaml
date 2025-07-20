@@ -37,7 +37,7 @@
         <!-- Szűrők -->
         <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,0,0,10">
             <Label Content="Name:" VerticalAlignment="Center"/>
-            <TextBox x:Name="NameFilterTextBox" Width="120" Margin="5,0,15,0"/>
+            <TextBox Text="{Binding NameFilter, UpdateSourceTrigger=PropertyChanged}" Width="120" Margin="5,0,15,0"/>
 
             <Label Content="Date:" VerticalAlignment="Center"/>
             <DatePicker x:Name="DateFilterPicker" Width="140" Margin="5,0,15,0"/>
@@ -50,7 +50,7 @@
         </StackPanel>
 
         <!-- DataGrid -->
-        <DataGrid Grid.Row="2" ItemsSource="{Binding Contacts}" AutoGenerateColumns="False" CanUserAddRows="False" SelectionMode="Extended" HeadersVisibility="Column">
+        <DataGrid Grid.Row="2" ItemsSource="{Binding FilteredContacts}" AutoGenerateColumns="False" CanUserAddRows="False" SelectionMode="Extended" HeadersVisibility="Column">
             <DataGrid.Columns>
                 <!--
                 <DataGridCheckBoxColumn Header="Select" Binding="{Binding IsSelected}" Width="60"/>
