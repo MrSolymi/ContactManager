@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace McDContactManager.Model;
 
-public class Contact
+public partial class Contact
 {
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -12,14 +12,23 @@ public class Contact
     public string Name { get; private set; }
 
     public string Phone { get; private set; }
-    
+
     public string Email { get; private set; }
 
+    public DateTime DateCreated { get; private set; }
+    
+    public bool Published { get; private set; }
+
+    public bool Hired { get; private set; }
+    
     public Contact(string name, string phone, string email)
     {
         Name = name;
         Phone = phone;
         Email = email;
+        DateCreated = DateTime.Now;
+        Published = false;
+        Hired = false;
     }
 
     private Contact()

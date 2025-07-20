@@ -13,8 +13,8 @@ public class UploadViewModel
 {
     public ICommand SelectFileCommand { get; }
     public ICommand CloseWindowCommand { get; }
-    
-    public ObservableCollection<Contact> Contacts { get; } = new();
+
+    private ObservableCollection<Contact> Contacts { get; } = new();
 
     public UploadViewModel()
     {
@@ -56,28 +56,28 @@ public class UploadViewModel
                     Contacts.Add(new Contact(name, phone, email));
                 }
             }
+
+            int newContactsCount;
+            SaveContactsToDatabase(out newContactsCount);
             
-            MessageBox.Show($"Sikeresen beolvasva {Contacts.Count} kontakt.");
-            
-            SaveContactsToDatabase();
-            
-            // using (StreamWriter writer = new StreamWriter("contacts.txt"))
-            // {
-            //     foreach (var contact in Contacts)
-            //     {
-            //         writer.WriteLine(contact);
-            //     }
-            // }
+            MessageBox.Show($"Sikeresen beolvasva {newContactsCount} kontakt.");
         }
     }
 
-    private void SaveContactsToDatabase()
+    private void SaveContactsToDatabase(out int newContactsCount)
     {
+        newContactsCount = 0;
+        
         using var db = new DatabaseContext();
-        db.Database.EnsureCreated(); // létrehozza, ha még nem létezik
+        db.Database.EnsureCreated(); // ez csak akkor hoz létre adatbázist, ha még nincs — jó így
 
         foreach (var contact in Contacts)
         {
+            var alreadyExists = db.Contacts.Any(c => c.Phone == contact.Phone);
+
+            if (alreadyExists) continue;
+            
+            newContactsCount++;
             db.Contacts.Add(contact);
         }
 

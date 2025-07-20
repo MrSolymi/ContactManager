@@ -4,15 +4,21 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:McDContactManager"
+        xmlns:vm="clr-namespace:McDContactManager.ViewModel"
         mc:Ignorable="d"
         Title="MainWindow" Height="900" Width="1600">
+    
+    <Window.DataContext>
+        <vm:MainWindowViewModel />
+    </Window.DataContext>
+    
     <!--
     <Grid>
         <Button Content="Fájl feltöltése" Width="150" Height="40" Click="OpenUploadWindow_Click" HorizontalAlignment="Center" VerticalAlignment="Center"/>
     </Grid>
     -->
     
-        <Grid Margin="10">
+    <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/> <!-- Gombok -->
             <RowDefinition Height="Auto"/> <!-- Szűrők -->
@@ -21,8 +27,8 @@
 
         <!-- Gombok -->
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,0,0,10">
-            <Button x:Name="UploadButton" Content="Upload" Margin="0,0,10,0" Width="80" Click="OpenUploadWindow_Click"/>
-            <Button x:Name="LoadButton" Content="Load" Margin="0,0,10,0" Width="80"/>
+            <Button Content="Upload" Command="{Binding OpenUploadCommand}" Margin="0,0,10,0" Width="80"/>
+            <Button Content="Load" Command="{Binding LoadContactsCommand}" Margin="0,0,10,0" Width="80"/>
             <Button x:Name="UpdateButton" Content="Update" Margin="0,0,10,0" Width="80"/>
             <Button x:Name="MarkPublishedButton" Content="Marked as Published" Margin="0,0,10,0" Width="130"/>
             <Button x:Name="MarkHiredButton" Content="Marked as Hired" Width="120"/>
@@ -44,15 +50,17 @@
         </StackPanel>
 
         <!-- DataGrid -->
-        <DataGrid Grid.Row="2" x:Name="ContactsDataGrid" AutoGenerateColumns="False" CanUserAddRows="False" SelectionMode="Extended">
+        <DataGrid Grid.Row="2" ItemsSource="{Binding Contacts}" AutoGenerateColumns="False" CanUserAddRows="False" SelectionMode="Extended" HeadersVisibility="Column">
             <DataGrid.Columns>
+                <!--
                 <DataGridCheckBoxColumn Header="Select" Binding="{Binding IsSelected}" Width="60"/>
-                <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*"/>
-                <DataGridTextColumn Header="Phone" Binding="{Binding Phone}" Width="*"/>
-                <DataGridTextColumn Header="Email" Binding="{Binding Email}" Width="*"/>
-                <DataGridTextColumn Header="Date" Binding="{Binding Date}" Width="*"/>
-                <DataGridTextColumn Header="Published" Binding="{Binding Date}" Width="80"/>
-                <DataGridTextColumn Header="Hired" Binding="{Binding Date}" Width="80"/>
+                -->
+                <DataGridTextColumn Header="Name" Binding="{Binding Name, Mode=OneWay}" Width="*" CanUserResize="False"/>
+                <DataGridTextColumn Header="Phone" Binding="{Binding Phone, Mode=OneWay}" Width="*" CanUserResize="False"/>
+                <DataGridTextColumn Header="Email" Binding="{Binding Email, Mode=OneWay}" Width="*" CanUserResize="False"/>
+                <DataGridTextColumn Header="Date" Binding="{Binding DateCreated, Mode=OneWay}" Width="*" CanUserResize="False"/>
+                <DataGridTextColumn Header="Published" Binding="{Binding Published, Mode=OneWay}" Width="80" CanUserResize="False"/>
+                <DataGridTextColumn Header="Hired" Binding="{Binding Hired, Mode=OneWay}" Width="80" CanUserResize="False"/>
             </DataGrid.Columns>
         </DataGrid>
     </Grid>

@@ -21,10 +21,4 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
     }
-    
-    private void OpenUploadWindow_Click(object sender, RoutedEventArgs e)
-    {
-        var uploadWindow = new UploadWindow();
-        uploadWindow.ShowDialog(); // Modálisan nyílik meg
-    }
 }
