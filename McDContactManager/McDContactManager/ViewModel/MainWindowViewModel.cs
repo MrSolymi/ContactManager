@@ -26,7 +26,31 @@ public class MainWindowViewModel : INotifyPropertyChanged
         }
     }
     
+    public string PhoneFilter
+    {
+        get => _phoneFilter;
+        set
+        {
+            _phoneFilter = value;
+            OnPropertyChanged(nameof(PhoneFilter));
+            ApplyFilters();
+        }
+    }
+
+    public string EmailFilter
+    {
+        get => _emailFilter;
+        set
+        {
+            _emailFilter = value;
+            OnPropertyChanged(nameof(EmailFilter));
+            ApplyFilters();
+        }
+    }
+    
     private string _nameFilter;
+    private string _phoneFilter;
+    private string _emailFilter;
 
     public MainWindowViewModel()
     {
@@ -71,6 +95,16 @@ public class MainWindowViewModel : INotifyPropertyChanged
         if (!string.IsNullOrWhiteSpace(NameFilter))
         {
             query = query.Where(c => c.Name.Contains(NameFilter, StringComparison.OrdinalIgnoreCase));
+        }
+        
+        if (!string.IsNullOrWhiteSpace(PhoneFilter))
+        {
+            query = query.Where(c => c.Phone.Contains(PhoneFilter, StringComparison.OrdinalIgnoreCase));
+        }
+        
+        if (!string.IsNullOrWhiteSpace(EmailFilter))
+        {
+            query = query.Where(c => c.Email.Contains(EmailFilter, StringComparison.OrdinalIgnoreCase));
         }
 
         foreach (var contact in query)

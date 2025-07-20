@@ -43,10 +43,10 @@
             <DatePicker x:Name="DateFilterPicker" Width="140" Margin="5,0,15,0"/>
 
             <Label Content="Phone:" VerticalAlignment="Center"/>
-            <TextBox x:Name="PhoneFilterTextBox" Width="120"/>
+            <TextBox Text="{Binding PhoneFilter, UpdateSourceTrigger=PropertyChanged}" Width="120" Margin="5,0,15,0"/>
             
             <Label Content="Email:" VerticalAlignment="Center"/>
-            <TextBox x:Name="EmailFilterTextBox" Width="120"/>
+            <TextBox Text="{Binding EmailFilter, UpdateSourceTrigger=PropertyChanged}" Width="120" Margin="5,0,15,0"/>
         </StackPanel>
 
         <!-- DataGrid -->
