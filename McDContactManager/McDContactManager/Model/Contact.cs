@@ -7,6 +7,7 @@ namespace McDContactManager.Model;
 public class Contact : INotifyPropertyChanged
 {
     private bool _published;
+    private bool _hired;
 
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -30,8 +31,17 @@ public class Contact : INotifyPropertyChanged
         }
     }
 
-    public bool Hired { get; private set; }
-    
+    public bool Hired
+    {
+        get => _hired;
+        set
+        {
+            if (value == _hired) return;
+            _hired = value;
+            OnPropertyChanged(nameof(Hired));
+        }
+    }
+
     public Contact(string name, string phone, string email)
     {
         Name = name;

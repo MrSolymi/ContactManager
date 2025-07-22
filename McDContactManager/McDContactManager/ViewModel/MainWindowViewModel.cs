@@ -12,6 +12,9 @@ public class MainWindowViewModel : INotifyPropertyChanged
     public ICommand OpenUploadCommand { get; }
     public ICommand LoadContactsCommand { get; }
     public RelayCommand MarkPublishedCommand { get; }
+    public RelayCommand MarkHiredCommand { get; }
+    public RelayCommand MarkNotPublishedCommand { get; }
+    public RelayCommand MarkNotHiredCommand { get; }
     
     public ObservableCollection<Contact> AllContacts { get; } = new();
     public ObservableCollection<Contact> FilteredContacts { get; } = new();
@@ -85,10 +88,46 @@ public class MainWindowViewModel : INotifyPropertyChanged
         
         
         MarkPublishedCommand = new RelayCommand(ExecuteMarkPublished, CanExecuteMarkPublished);
+        MarkHiredCommand = new RelayCommand(ExecuteMarkHired, CanExecuteMarkHired);
+        MarkNotPublishedCommand = new RelayCommand(ExecuteMarkNotPublished, CanExecuteMarkNotPublished);
+        MarkNotHiredCommand = new RelayCommand(ExecuteMarkNotHired, CanExecuteMarkNotHired);
+            
         SelectedContacts.CollectionChanged += (s, e) =>
         {
-            MarkPublishedCommand.RaiseCanExecuteChanged();
+            if (e.NewItems != null)
+            {
+                foreach (Contact c in e.NewItems)
+                {
+                    c.PropertyChanged += SelectedContact_PropertyChanged;
+                }
+            }
+            if (e.OldItems != null)
+            {
+                foreach (Contact c in e.OldItems)
+                {
+                    c.PropertyChanged -= SelectedContact_PropertyChanged;
+                }
+            }
+
+            RaiseAllCanExecuteChanged();
         };
+
+    }
+    
+    private void SelectedContact_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(Contact.Published) || e.PropertyName == nameof(Contact.Hired))
+        {
+            RaiseAllCanExecuteChanged();
+        }
+    }
+    
+    private void RaiseAllCanExecuteChanged()
+    {
+        MarkPublishedCommand.RaiseCanExecuteChanged();
+        MarkNotPublishedCommand.RaiseCanExecuteChanged();
+        MarkHiredCommand.RaiseCanExecuteChanged();
+        MarkNotHiredCommand.RaiseCanExecuteChanged();
     }
     
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -159,9 +198,68 @@ public class MainWindowViewModel : INotifyPropertyChanged
     
     private bool CanExecuteMarkPublished()
     {
-        return SelectedContacts != null && SelectedContacts.Count > 0;
+        if (SelectedContacts.Count == 0) return false;
+        
+        var canExecute = false;
+        foreach (var contact in SelectedContacts)
+        {
+            if (!contact.Published)
+            {
+                canExecute = true;
+            }
+        }
+        
+        return canExecute;
+    }
+
+    private bool CanExecuteMarkHired()
+    {
+        if (SelectedContacts.Count == 0) return false;
+        
+        var canExecute = false;
+        foreach (var contact in SelectedContacts)
+        {
+            if (!contact.Hired)
+            {
+                canExecute = true;
+            }
+        }
+        
+        return canExecute;
+    }
+
+    private bool CanExecuteMarkNotPublished()
+    {
+        if (SelectedContacts.Count == 0) return false;
+
+        var canExecute = false;
+        foreach (var contact in SelectedContacts)
+        {
+            if (contact.Published)
+            {
+                canExecute = true;
+            }
+        }
+        
+        return canExecute;
     }
     
+    private bool CanExecuteMarkNotHired()
+    {
+        if (SelectedContacts.Count == 0) return false;
+        
+        var canExecute = false;
+        foreach (var contact in SelectedContacts)
+        {
+            if (contact.Hired)
+            {
+                canExecute = true;
+            }
+        }
+        
+        return canExecute;
+    }
+
     private void ExecuteMarkPublished()
     {
         var selected = SelectedContacts.ToList();
@@ -186,6 +284,90 @@ public class MainWindowViewModel : INotifyPropertyChanged
             if (selected.Any(s => s.Id == contact.Id))
             {
                 contact.Published = true;
+            }
+        }
+    }
+    
+    private void ExecuteMarkHired()
+    {
+        var selected = SelectedContacts.ToList();
+
+        if (selected.Count == 0) return;
+
+        using var db = new DatabaseContext();
+
+        foreach (var contact in selected)
+        {
+            var tracked = db.Contacts.FirstOrDefault(c => c.Id == contact.Id);
+            if (tracked != null)
+            {
+                tracked.Hired = true;
+            }
+        }
+
+        db.SaveChanges();
+
+        foreach (var contact in FilteredContacts)
+        {
+            if (selected.Any(s => s.Id == contact.Id))
+            {
+                contact.Hired = true; // ez triggereli a UI-t
+            }
+        }
+    }
+    
+    private void ExecuteMarkNotPublished()
+    {
+        var selected = SelectedContacts.ToList();
+        
+        if (selected.Count == 0) return;
+
+        using var db = new DatabaseContext();
+
+        foreach (var contact in selected)
+        {
+            var tracked = db.Contacts.FirstOrDefault(c => c.Id == contact.Id);
+            if (tracked != null)
+            {
+                tracked.Published = false;
+            }
+        }
+
+        db.SaveChanges();
+
+        foreach (var contact in FilteredContacts)
+        {
+            if (selected.Any(s => s.Id == contact.Id))
+            {
+                contact.Published = false;
+            }
+        }
+    }
+    
+    private void ExecuteMarkNotHired()
+    {
+        var selected = SelectedContacts.ToList();
+
+        if (selected.Count == 0) return;
+
+        using var db = new DatabaseContext();
+
+        foreach (var contact in selected)
+        {
+            var tracked = db.Contacts.FirstOrDefault(c => c.Id == contact.Id);
+            if (tracked != null)
+            {
+                tracked.Hired = false;
+            }
+        }
+
+        db.SaveChanges();
+
+        foreach (var contact in FilteredContacts)
+        {
+            if (selected.Any(s => s.Id == contact.Id))
+            {
+                contact.Hired = false; // ez triggereli a UI-t
             }
         }
     }

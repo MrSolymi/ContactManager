@@ -32,7 +32,9 @@
             <Button Content="Load" Command="{Binding LoadContactsCommand}" Margin="0,0,10,0" Width="80"/>
             <Button x:Name="UpdateButton" Content="Update" Margin="0,0,10,0" Width="80"/>
             <Button Command="{Binding MarkPublishedCommand}" Content="Marked as Published" Margin="0,0,10,0" Width="130"/>
-            <Button x:Name="MarkHiredButton" Content="Marked as Hired" Width="120"/>
+            <Button Command="{Binding MarkHiredCommand}" Content="Marked as Hired" Margin="0,0,10,0" Width="120"/>
+            <Button Command="{Binding MarkNotPublishedCommand}" Content="Marked as NOT Published" Margin="0,0,10,0" Width="130"/>
+            <Button Command="{Binding MarkNotHiredCommand}" Content="Marked as NOT Hired" Width="120"/>
         </StackPanel>
 
         <!-- Szűrők -->
@@ -54,7 +56,18 @@
         </StackPanel>
 
         <!-- DataGrid -->
-        <DataGrid Grid.Row="2" ItemsSource="{Binding FilteredContacts}" behaviors:SelectedItemsBehavior.BindableSelectedItems="{Binding SelectedContacts}" AutoGenerateColumns="False" CanUserAddRows="False" SelectionMode="Extended" HeadersVisibility="Column" SelectionUnit="FullRow">
+        <DataGrid Grid.Row="2" 
+                  ItemsSource="{Binding FilteredContacts}" 
+                  behaviors:SelectedItemsBehavior.BindableSelectedItems="{Binding SelectedContacts}" 
+                  AutoGenerateColumns="False" 
+                  CanUserAddRows="False"
+                  CanUserResizeColumns="False"
+                  CanUserResizeRows="False"
+                  CanUserReorderColumns="False"
+                  SelectionMode="Extended" 
+                  HeadersVisibility="Column" 
+                  SelectionUnit="FullRow" 
+                  CanUserDeleteRows="False">
             <DataGrid.Columns>
                 <!--
                 <DataGridCheckBoxColumn Header="Select" Binding="{Binding IsSelected}" Width="60"/>
