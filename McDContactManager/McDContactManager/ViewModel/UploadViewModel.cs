@@ -11,6 +11,7 @@ namespace McDContactManager.ViewModel;
 
 public class UploadViewModel
 {
+    public bool UploadSuccessful { get; private set; }
     public ICommand SelectFileCommand { get; }
     public ICommand CloseWindowCommand { get; }
 
@@ -19,7 +20,16 @@ public class UploadViewModel
     public UploadViewModel()
     {
         SelectFileCommand = new RelayCommand(SelectFile);
-        CloseWindowCommand = new RelayCommand<Window>(w => w?.Close());
+        CloseWindowCommand = new RelayCommand<Window>(w =>
+        {
+            if (w != null)
+            {
+                if (UploadSuccessful)
+                    w.DialogResult = true;
+                else
+                    w.Close();
+            }
+        });
     }
 
     private void SelectFile()
@@ -61,6 +71,8 @@ public class UploadViewModel
             SaveContactsToDatabase(out newContactsCount);
             
             MessageBox.Show($"Sikeresen beolvasva {newContactsCount} kontakt.");
+            
+            UploadSuccessful = true;
         }
     }
 

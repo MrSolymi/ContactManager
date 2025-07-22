@@ -140,9 +140,30 @@ public class MainWindowViewModel : INotifyPropertyChanged
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
     
-    private static void OpenUploadWindow()
+    private void OpenUploadWindow()
     {
-        var window = new View.UploadWindow();
+        // var window = new View.UploadWindow();
+        // var result = window.ShowDialog();
+        //
+        // if (result == true)
+        // {
+        //     LoadContactsFromDatabase();
+        // }
+        
+        var vm = new UploadViewModel();
+        var window = new View.UploadWindow
+        {
+            DataContext = vm
+        };
+
+        window.Closed += (_, _) =>
+        {
+            if (vm.UploadSuccessful)
+            {
+                LoadContactsFromDatabase();
+            }
+        };
+
         window.ShowDialog();
     }
     
