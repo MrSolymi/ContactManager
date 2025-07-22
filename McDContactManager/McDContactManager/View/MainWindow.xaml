@@ -28,13 +28,13 @@
 
         <!-- Gombok -->
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,0,0,10">
-            <Button Content="Upload" Command="{Binding OpenUploadCommand}" Margin="0,0,10,0" Width="80"/>
-            <Button Content="Load" Command="{Binding LoadContactsCommand}" Margin="0,0,10,0" Width="80"/>
+            <Button Command="{Binding OpenUploadCommand}" Content="Upload" Margin="0,0,10,0" Width="80"/>
+            <Button Command="{Binding LoadContactsCommand}" Content="Load" Margin="0,0,10,0" Width="80"/>
             <Button x:Name="UpdateButton" Content="Update" Margin="0,0,10,0" Width="80"/>
-            <Button Command="{Binding MarkPublishedCommand}" Content="Marked as Published" Margin="0,0,10,0" Width="130"/>
-            <Button Command="{Binding MarkHiredCommand}" Content="Marked as Hired" Margin="0,0,10,0" Width="120"/>
-            <Button Command="{Binding MarkNotPublishedCommand}" Content="Marked as NOT Published" Margin="0,0,10,0" Width="130"/>
-            <Button Command="{Binding MarkNotHiredCommand}" Content="Marked as NOT Hired" Width="120"/>
+            <Button Command="{Binding MarkPublishedCommand}" Content="Mark as Published" Margin="0,0,10,0" Width="140"/>
+            <Button Command="{Binding MarkHiredCommand}" Content="Mark as Hired" Margin="0,0,10,0" Width="140"/>
+            <Button Command="{Binding MarkNotPublishedCommand}" Content="Mark as NOT Published" Margin="0,0,10,0" Width="140"/>
+            <Button Command="{Binding MarkNotHiredCommand}" Content="Mark as NOT Hired" Width="140"/>
         </StackPanel>
 
         <!-- Szűrők -->
@@ -72,12 +72,23 @@
                 <!--
                 <DataGridCheckBoxColumn Header="Select" Binding="{Binding IsSelected}" Width="60"/>
                 -->
-                <DataGridTextColumn Header="Name" Binding="{Binding Name, Mode=OneWay}" Width="*" CanUserResize="False"/>
-                <DataGridTextColumn Header="Phone" Binding="{Binding Phone, Mode=OneWay}" Width="*" CanUserResize="False"/>
-                <DataGridTextColumn Header="Email" Binding="{Binding Email, Mode=OneWay}" Width="*" CanUserResize="False"/>
-                <DataGridTextColumn Header="Date" Binding="{Binding DateCreated, Mode=OneWay, StringFormat='yyyy. MM. dd'}" Width="*" CanUserResize="False"/>
-                <DataGridTextColumn Header="Published" Binding="{Binding Published, Mode=OneWay}" IsReadOnly="True" Width="80" CanUserResize="False"/>
-                <DataGridTextColumn Header="Hired" Binding="{Binding Hired, Mode=OneWay}" IsReadOnly="True" Width="80" CanUserResize="False"/>
+                <DataGridTextColumn Header="Name" 
+                                    Binding="{Binding Name, Mode=OneWay}" Width="*" CanUserResize="False"/>
+                
+                <DataGridTextColumn Header="Phone" 
+                                    Binding="{Binding Phone, Mode=OneWay}" Width="*" CanUserResize="False"/>
+                
+                <DataGridTextColumn Header="Email" 
+                                    Binding="{Binding Email, Mode=OneWay}" Width="*" CanUserResize="False"/>
+                
+                <DataGridTextColumn Header="Date" 
+                                    Binding="{Binding DateCreated, Mode=OneWay, StringFormat='yyyy. MM. dd'}" Width="*" CanUserResize="False"/>
+                
+                <DataGridTextColumn Header="Published" 
+                                    Binding="{Binding Published, Mode=OneWay}" IsReadOnly="True" Width="80" CanUserResize="False"/>
+                
+                <DataGridTextColumn Header="Hired" 
+                                    Binding="{Binding Hired, Mode=OneWay}" IsReadOnly="True" Width="80" CanUserResize="False"/>
             </DataGrid.Columns>
         </DataGrid>
     </Grid>

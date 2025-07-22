@@ -1,6 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.IO;
+using System.Windows;
 using System.Windows.Input;
 using McDContactManager.data;
 using McDContactManager.Model;
@@ -84,7 +86,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
     public MainWindowViewModel()
     {
         OpenUploadCommand = new RelayCommand(OpenUploadWindow);
-        LoadContactsCommand = new RelayCommand(LoadContactsFromDatabase);
+        LoadContactsCommand = new RelayCommand(() => LoadContactsFromDatabase());
         
         
         MarkPublishedCommand = new RelayCommand(ExecuteMarkPublished, CanExecuteMarkPublished);
@@ -111,7 +113,8 @@ public class MainWindowViewModel : INotifyPropertyChanged
 
             RaiseAllCanExecuteChanged();
         };
-
+        
+        LoadContactsFromDatabase(silent: true);
     }
     
     private void SelectedContact_PropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -143,20 +146,35 @@ public class MainWindowViewModel : INotifyPropertyChanged
         window.ShowDialog();
     }
     
-    private void LoadContactsFromDatabase()
+    private void LoadContactsFromDatabase(bool silent = false)
     {
-        //TODO: handle non existent db
-        
-        using var db = new DatabaseContext();
-        var contactsFromDb = db.Contacts.ToList();
-
-        AllContacts.Clear();
-        FilteredContacts.Clear();
-        
-        foreach (var contact in contactsFromDb)
+        try
         {
-            AllContacts.Add(contact);
-            FilteredContacts.Add(contact);
+            if (!File.Exists("contacts.db"))
+            {
+                if (!silent)
+                {
+                    MessageBox.Show("Adatbázis nem található.", "Hiba", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+            }
+
+            using var db = new DatabaseContext();
+            var contactsFromDb = db.Contacts.ToList();
+
+            AllContacts.Clear();
+            FilteredContacts.Clear();
+
+            foreach (var contact in contactsFromDb)
+            {
+                AllContacts.Add(contact);
+                FilteredContacts.Add(contact);
+            }
+        }
+        catch (Exception ex)
+        {
+            if (!silent)
+                MessageBox.Show($"Hiba történt az adatbázis betöltésekor:\n{ex.Message}", "Hiba", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
     
