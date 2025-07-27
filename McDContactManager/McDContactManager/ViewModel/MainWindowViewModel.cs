@@ -11,6 +11,7 @@ namespace McDContactManager.ViewModel;
 
 public class MainWindowViewModel : INotifyPropertyChanged
 {
+    public ICommand OpenLoginCommand { get; }
     public ICommand OpenUploadCommand { get; }
     public ICommand LoadContactsCommand { get; }
     public RelayCommand MarkPublishedCommand { get; }
@@ -78,13 +79,14 @@ public class MainWindowViewModel : INotifyPropertyChanged
         }
     }
     
-    private string _nameFilter;
-    private string _phoneFilter;
-    private string _emailFilter;
+    private string _nameFilter = "";
+    private string _phoneFilter = "";
+    private string _emailFilter = "";
     private DateTime? _dateFrom;
     private DateTime? _dateTo = DateTime.Today;
     public MainWindowViewModel()
     {
+        OpenLoginCommand = new RelayCommand(OpenLoginWindow);
         OpenUploadCommand = new RelayCommand(OpenUploadWindow);
         LoadContactsCommand = new RelayCommand(() => LoadContactsFromDatabase());
         
@@ -164,6 +166,12 @@ public class MainWindowViewModel : INotifyPropertyChanged
             }
         };
 
+        window.ShowDialog();
+    }
+
+    private void OpenLoginWindow()
+    {
+        var window = new View.LoginWindow();
         window.ShowDialog();
     }
     
