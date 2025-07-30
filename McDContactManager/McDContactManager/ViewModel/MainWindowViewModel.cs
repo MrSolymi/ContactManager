@@ -4,16 +4,18 @@ using System.ComponentModel;
 using System.IO;
 using System.Windows;
 using System.Windows.Input;
+using Azure.Core;
 using McDContactManager.data;
 using McDContactManager.Model;
+using McDContactManager.Service;
 
 namespace McDContactManager.ViewModel;
 
 public class MainWindowViewModel : INotifyPropertyChanged
 {
-    public ICommand OpenLoginCommand { get; }
     public ICommand OpenUploadCommand { get; }
     public ICommand LoadContactsCommand { get; }
+    public ICommand LoginCommand { get; }
     public RelayCommand MarkPublishedCommand { get; }
     public RelayCommand MarkHiredCommand { get; }
     public RelayCommand MarkNotPublishedCommand { get; }
@@ -86,10 +88,10 @@ public class MainWindowViewModel : INotifyPropertyChanged
     private DateTime? _dateTo = DateTime.Today;
     public MainWindowViewModel()
     {
-        OpenLoginCommand = new RelayCommand(OpenLoginWindow);
         OpenUploadCommand = new RelayCommand(OpenUploadWindow);
         LoadContactsCommand = new RelayCommand(() => LoadContactsFromDatabase());
-        
+
+        LoginCommand = new RelayCommand(async () => await ExecuteLoginCommand());
         
         MarkPublishedCommand = new RelayCommand(ExecuteMarkPublished, CanExecuteMarkPublished);
         MarkHiredCommand = new RelayCommand(ExecuteMarkHired, CanExecuteMarkHired);
@@ -169,10 +171,40 @@ public class MainWindowViewModel : INotifyPropertyChanged
         window.ShowDialog();
     }
 
-    private void OpenLoginWindow()
+    private async Task ExecuteLoginCommand()
     {
-        var window = new View.LoginWindow();
-        window.ShowDialog();
+        // AuthService inicializálása
+        AuthService.Initialize();
+
+        try
+        {
+            // Token automatikusan kérő credential
+            TokenCredential credential = AuthService.Credential;
+
+            // Egyszerű validálás: kérünk 1 token lekérést
+            var token = await credential.GetTokenAsync(
+                new TokenRequestContext(new[] { "https://graph.microsoft.com/.default" }),
+                default
+            );
+
+            if (!string.IsNullOrWhiteSpace(token.Token))
+            {
+                App.Current.Properties["Credential"] = credential;
+
+                foreach (Window window in Application.Current.Windows)
+                {
+                    if (window.Title == "Bejelentkezés")
+                    {
+                        window.Close();
+                        break;
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Bejelentkezés sikertelen: {ex.Message}", "Hiba", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
     }
     
     private void LoadContactsFromDatabase(bool silent = false)
