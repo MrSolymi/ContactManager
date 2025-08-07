@@ -7,57 +7,54 @@
         xmlns:vm="clr-namespace:McDContactManager.ViewModel"
         xmlns:behaviors="clr-namespace:McDContactManager.Model"
         mc:Ignorable="d"
-        Title="MainWindow" Height="900" Width="1600">
+        Title="McD Kontakt Kezelő" Height="900" Width="1600">
     
     <Window.DataContext>
         <vm:MainWindowViewModel />
     </Window.DataContext>
     
-    <!--
-    <Grid>
-        <Button Content="Fájl feltöltése" Width="150" Height="40" Click="OpenUploadWindow_Click" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-    </Grid>
-    -->
-    
     <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/> <!-- Gombok -->
+            <RowDefinition Height="Auto"/> 
             <RowDefinition Height="Auto"/> <!-- Szűrők -->
             <RowDefinition Height="*"/>    <!-- DataGrid -->
         </Grid.RowDefinitions>
 
         <!-- Gombok -->
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,0,0,10">
-            <Button Command="{Binding LoginCommand}" Content="Login" Margin="0,0,10,0" Width="80"/>
-            <!-- <Button Command="{Binding OpenUploadCommand}" Content="Upload" Margin="0,0,10,0" Width="80"/> -->
-            <Button Command="{Binding LoadContactsCommand}" Content="Load" Margin="0,0,10,0" Width="80"/>
-            <Button Command="{Binding DebugCommand}" Content="Debug" Margin="0,0,10,0" Width="80"/>
-            <Button Command="{Binding MarkPublishedCommand}" Content="Mark as Published" Margin="0,0,10,0" Width="140"/>
-            <Button Command="{Binding MarkHiredCommand}" Content="Mark as Hired" Margin="0,0,10,0" Width="140"/>
-            <Button Command="{Binding MarkNotPublishedCommand}" Content="Mark as NOT Published" Margin="0,0,10,0" Width="140"/>
-            <Button Command="{Binding MarkNotHiredCommand}" Content="Mark as NOT Hired" Width="140"/>
+            <Button Command="{Binding LoginCommand}" Content="Bejelentkezés" Margin="0,0,10,0" Width="100"/>
+            <Button Command="{Binding RefreshCommand}" Content="Frissítés" Margin="0,0,10,0" Width="100"/>
+        </StackPanel>
+        
+        
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,0,10">
+            <Button Command="{Binding MarkPublishedCommand}" Content="Megjelent" Margin="0,0,10,0" Width="140"/>
+            <Button Command="{Binding MarkNotPublishedCommand}" Content="Nem jelent meg" Margin="0,0,10,0" Width="140"/>
+            <Button Command="{Binding MarkHiredCommand}" Content="Felvett" Margin="0,0,10,0" Width="140"/>
+            <Button Command="{Binding MarkNotHiredCommand}" Content="Visszautasítva" Width="140"/>
         </StackPanel>
 
         <!-- Szűrők -->
-        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,0,0,10">
-            <Label Content="Name:" VerticalAlignment="Center"/>
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,0,0,10">
+            <Label Content="Név:" VerticalAlignment="Center"/>
             <TextBox Text="{Binding NameFilter, UpdateSourceTrigger=PropertyChanged}" Width="120" Margin="5,0,15,0"/>
 
-            <Label Content="Phone:" VerticalAlignment="Center"/>
+            <Label Content="Telefonszám:" VerticalAlignment="Center"/>
             <TextBox Text="{Binding PhoneFilter, UpdateSourceTrigger=PropertyChanged}" Width="120" Margin="5,0,15,0"/>
             
-            <Label Content="Email:" VerticalAlignment="Center"/>
+            <Label Content="E-mail cím:" VerticalAlignment="Center"/>
             <TextBox Text="{Binding EmailFilter, UpdateSourceTrigger=PropertyChanged}" Width="120" Margin="5,0,15,0"/>
             
-            <Label Content="Date from:" VerticalAlignment="Center"/>
-            <DatePicker SelectedDate="{Binding DateFrom}" Width="140" Margin="5,0,15,0"/>
+            <Label Content="Dátum -tól:" VerticalAlignment="Center"/>
+            <DatePicker Language="hu-HU" SelectedDate="{Binding DateFrom}" Width="140" Margin="5,0,15,0"/>
             
-            <Label Content="Date to:" VerticalAlignment="Center"/>
+            <Label Content="Dátum -ig:" VerticalAlignment="Center"/>
             <DatePicker SelectedDate="{Binding DateTo}" Width="140" Margin="5,0,15,0"/>
         </StackPanel>
 
         <!-- DataGrid -->
-        <DataGrid Grid.Row="2" 
+        <DataGrid Grid.Row="3" 
                   ItemsSource="{Binding FilteredContacts}" 
                   behaviors:SelectedItemsBehavior.BindableSelectedItems="{Binding SelectedContacts}" 
                   AutoGenerateColumns="False" 
@@ -70,25 +67,22 @@
                   SelectionUnit="FullRow" 
                   CanUserDeleteRows="False">
             <DataGrid.Columns>
-                <!--
-                <DataGridCheckBoxColumn Header="Select" Binding="{Binding IsSelected}" Width="60"/>
-                -->
-                <DataGridTextColumn Header="Name" 
+                <DataGridTextColumn Header="Név" 
                                     Binding="{Binding Name, Mode=OneWay}" Width="*" CanUserResize="False"/>
                 
-                <DataGridTextColumn Header="Phone" 
+                <DataGridTextColumn Header="Telefonszám" 
                                     Binding="{Binding Phone, Mode=OneWay}" Width="*" CanUserResize="False"/>
                 
-                <DataGridTextColumn Header="Email" 
+                <DataGridTextColumn Header="E-mail cím" 
                                     Binding="{Binding Email, Mode=OneWay}" Width="*" CanUserResize="False"/>
                 
-                <DataGridTextColumn Header="Date" 
+                <DataGridTextColumn Header="Dátum" 
                                     Binding="{Binding DateCreated, Mode=OneWay, StringFormat='yyyy. MM. dd'}" Width="*" CanUserResize="False"/>
                 
-                <DataGridTextColumn Header="Published" 
+                <DataGridTextColumn Header="Megjelent" 
                                     Binding="{Binding Published, Mode=OneWay}" IsReadOnly="True" Width="80" CanUserResize="False"/>
                 
-                <DataGridTextColumn Header="Hired" 
+                <DataGridTextColumn Header="Felvett" 
                                     Binding="{Binding Hired, Mode=OneWay}" IsReadOnly="True" Width="80" CanUserResize="False"/>
             </DataGrid.Columns>
         </DataGrid>

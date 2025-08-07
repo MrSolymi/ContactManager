@@ -13,7 +13,7 @@ namespace McDContactManager.ViewModel;
 
 public class MainWindowViewModel : INotifyPropertyChanged
 {
-    public ICommand DebugCommand { get; }
+    public ICommand RefreshCommand { get; }
     public ICommand LoadContactsCommand { get; }
     public ICommand LoginCommand { get; }
     public RelayCommand MarkPublishedCommand { get; }
@@ -88,7 +88,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
     private DateTime? _dateTo = DateTime.Today;
     public MainWindowViewModel()
     {
-        DebugCommand = new RelayCommand(async () => await FetchEmailsAsync());
+        RefreshCommand = new RelayCommand(async () => await FetchEmailsAsync());
         LoginCommand = new RelayCommand(async () => await ExecuteLoginCommand());
         
         LoadContactsCommand = new RelayCommand(() => LoadContactsFromDatabase());
@@ -148,14 +148,14 @@ public class MainWindowViewModel : INotifyPropertyChanged
     {
         if (!App.Current.Properties.Contains("Credential"))
         {
-            Console.WriteLine("Nincs bejelentkezve.");
+            MessageBox.Show("Nincs bejelentkezve.");
             return;
         }
 
         var credential = App.Current.Properties["Credential"] as TokenCredential;
         if (credential == null)
         {
-            Console.WriteLine("Credential null.");
+            MessageBox.Show("Credential null.");
             return;
         }
 
