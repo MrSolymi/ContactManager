@@ -165,15 +165,52 @@ public class MainWindowViewModel : INotifyPropertyChanged
         
         var emailBodies = await graph.GetEmailTextsFromSenderAsync(senderEmail, top: 50);
 
+        var parsedContacts = new List<Contact>();
+
         foreach (var html in emailBodies)
         {
-            var result = EmailParser.Parse(html);
+            var (name, phone, email) = EmailParser.Parse(html);
 
-            Console.WriteLine("-----------");
-            Console.WriteLine($"Név: {result.Name}");
-            Console.WriteLine($"Telefon: {result.Phone}");
-            Console.WriteLine($"Email: {result.Email}");
+            if (!string.IsNullOrWhiteSpace(name) &&
+                !string.IsNullOrWhiteSpace(phone) &&
+                !string.IsNullOrWhiteSpace(email))
+            {
+                var probNewContact = new Contact(name, phone, email);
+                
+                if (!parsedContacts.Contains(probNewContact))
+                {
+                    parsedContacts.Add(new Contact(name, phone, email));
+                }
+            }
         }
+
+        int newContactsCount;
+        SaveContactsToDatabase(parsedContacts, out newContactsCount);
+
+        MessageBox.Show($"Sikeresen beolvasva {newContactsCount} új kontakt.", "Siker", MessageBoxButton.OK, MessageBoxImage.Information);
+    }
+    
+    private void SaveContactsToDatabase(List<Contact> contacts, out int newContactsCount)
+    {
+        newContactsCount = 0;
+        
+        using var db = new DatabaseContext();
+        db.Database.EnsureCreated(); // ez csak akkor hoz létre adatbázist, ha még nincs — jó így
+
+        foreach (var contact in contacts)
+        {
+            var alreadyExists = db.Contacts.Any(c => c.Phone == contact.Phone);
+
+            if (alreadyExists) continue;
+            
+            newContactsCount++;
+            
+            db.Contacts.Add(contact);
+            AllContacts.Add(contact);
+            FilteredContacts.Add(contact);
+        }
+        
+        db.SaveChanges();
     }
     
     private async Task ExecuteLoginCommand()

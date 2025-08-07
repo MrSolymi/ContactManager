@@ -64,4 +64,18 @@ public class Contact : INotifyPropertyChanged
     public event PropertyChangedEventHandler? PropertyChanged;
     protected void OnPropertyChanged(string propertyName)
         => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+
+    public override bool Equals(object? obj)
+    {
+        if (obj is not Contact other)
+            return false;
+
+        // Telefonszám alapján összehasonlítás
+        return this.Phone == other.Phone;
+    }
+
+    public override int GetHashCode()
+    {
+        return Phone.GetHashCode();
+    }
 }
