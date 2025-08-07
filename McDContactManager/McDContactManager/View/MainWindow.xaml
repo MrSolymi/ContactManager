@@ -29,9 +29,9 @@
         <!-- Gombok -->
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,0,0,10">
             <Button Command="{Binding LoginCommand}" Content="Login" Margin="0,0,10,0" Width="80"/>
-            <Button Command="{Binding OpenUploadCommand}" Content="Upload" Margin="0,0,10,0" Width="80"/>
+            <!-- <Button Command="{Binding OpenUploadCommand}" Content="Upload" Margin="0,0,10,0" Width="80"/> -->
             <Button Command="{Binding LoadContactsCommand}" Content="Load" Margin="0,0,10,0" Width="80"/>
-            <Button x:Name="UpdateButton" Content="Update" Margin="0,0,10,0" Width="80"/>
+            <Button Command="{Binding DebugCommand}" Content="Debug" Margin="0,0,10,0" Width="80"/>
             <Button Command="{Binding MarkPublishedCommand}" Content="Mark as Published" Margin="0,0,10,0" Width="140"/>
             <Button Command="{Binding MarkHiredCommand}" Content="Mark as Hired" Margin="0,0,10,0" Width="140"/>
             <Button Command="{Binding MarkNotPublishedCommand}" Content="Mark as NOT Published" Margin="0,0,10,0" Width="140"/>

@@ -21,7 +21,13 @@ public static class AuthService
         {
             ClientId = EnvLoader.Get("CLIENT_ID"),
             RedirectUri = new Uri("http://localhost"),
-            TenantId = "common"
+            TenantId = "common",
+            TokenCachePersistenceOptions = new TokenCachePersistenceOptions
+            {
+                Name = "TemporaryLoginCache",
+                UnsafeAllowUnencryptedStorage = true
+            },
+            AuthenticationRecord = null
         });
     }
 }

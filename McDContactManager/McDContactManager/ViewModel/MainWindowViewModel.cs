@@ -13,7 +13,7 @@ namespace McDContactManager.ViewModel;
 
 public class MainWindowViewModel : INotifyPropertyChanged
 {
-    public ICommand OpenUploadCommand { get; }
+    public ICommand DebugCommand { get; }
     public ICommand LoadContactsCommand { get; }
     public ICommand LoginCommand { get; }
     public RelayCommand MarkPublishedCommand { get; }
@@ -88,10 +88,10 @@ public class MainWindowViewModel : INotifyPropertyChanged
     private DateTime? _dateTo = DateTime.Today;
     public MainWindowViewModel()
     {
-        OpenUploadCommand = new RelayCommand(OpenUploadWindow);
-        LoadContactsCommand = new RelayCommand(() => LoadContactsFromDatabase());
-
+        DebugCommand = new RelayCommand(async () => await FetchEmailsAsync());
         LoginCommand = new RelayCommand(async () => await ExecuteLoginCommand());
+        
+        LoadContactsCommand = new RelayCommand(() => LoadContactsFromDatabase());
         
         MarkPublishedCommand = new RelayCommand(ExecuteMarkPublished, CanExecuteMarkPublished);
         MarkHiredCommand = new RelayCommand(ExecuteMarkHired, CanExecuteMarkHired);
@@ -143,34 +143,39 @@ public class MainWindowViewModel : INotifyPropertyChanged
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
-    
-    private void OpenUploadWindow()
+
+    private async Task FetchEmailsAsync()
     {
-        // var window = new View.UploadWindow();
-        // var result = window.ShowDialog();
-        //
-        // if (result == true)
-        // {
-        //     LoadContactsFromDatabase();
-        // }
+        if (!App.Current.Properties.Contains("Credential"))
+        {
+            Console.WriteLine("Nincs bejelentkezve.");
+            return;
+        }
+
+        var credential = App.Current.Properties["Credential"] as TokenCredential;
+        if (credential == null)
+        {
+            Console.WriteLine("Credential null.");
+            return;
+        }
+
+        var graph = new GraphService(credential);
         
-        var vm = new UploadViewModel();
-        var window = new View.UploadWindow
-        {
-            DataContext = vm
-        };
+        var senderEmail = "solymosiati001220@gmail.com";
+        
+        var emailBodies = await graph.GetEmailTextsFromSenderAsync(senderEmail, top: 50);
 
-        window.Closed += (_, _) =>
+        foreach (var html in emailBodies)
         {
-            if (vm.UploadSuccessful)
-            {
-                LoadContactsFromDatabase();
-            }
-        };
+            var result = EmailParser.Parse(html);
 
-        window.ShowDialog();
+            Console.WriteLine("-----------");
+            Console.WriteLine($"Név: {result.Name}");
+            Console.WriteLine($"Telefon: {result.Phone}");
+            Console.WriteLine($"Email: {result.Email}");
+        }
     }
-
+    
     private async Task ExecuteLoginCommand()
     {
         // AuthService inicializálása
