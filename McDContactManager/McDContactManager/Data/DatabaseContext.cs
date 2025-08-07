@@ -1,4 +1,6 @@
-﻿using McDContactManager.Model;
+﻿using System.IO;
+using McDContactManager.Model;
+using McDContactManager.Service;
 using Microsoft.EntityFrameworkCore;
 
 namespace McDContactManager.data;
@@ -9,7 +11,9 @@ public class DatabaseContext : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        optionsBuilder.UseSqlite("Data Source=contacts.db");
+        var dbPath = Path.Combine(AppInitializer.AppFolderPath, "contacts.db");
+        
+        optionsBuilder.UseSqlite($"Data Source={dbPath}");
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
