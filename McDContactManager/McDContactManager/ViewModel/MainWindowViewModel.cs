@@ -101,7 +101,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
     private string _senderEmail = "";
     public MainWindowViewModel()
     {
-        RefreshCommand = new RelayCommand(async () => await FetchEmailsAsync());
+        RefreshCommand = new RelayCommand(async () => await FetchEmailsAsync(), CanFetchEmails);
         LoginCommand = new RelayCommand(async () => await ExecuteLoginCommand());
 
         CopySelectedEmailsCommand = new RelayCommand(ExecuteCopyEmails, CanExecuteCopyEmails);
@@ -161,6 +161,11 @@ public class MainWindowViewModel : INotifyPropertyChanged
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 
+    private bool CanFetchEmails()
+    {
+        return !string.IsNullOrEmpty(_senderEmail);
+    }
+    
     private async Task FetchEmailsAsync()
     {
         if (!App.Current.Properties.Contains("Credential"))

@@ -15,9 +15,9 @@ public class Contact : INotifyPropertyChanged
     
     public string Name { get; private set; }
 
-    public string Phone { get; private set; }
+    public string Phone { get; }
 
-    public string Email { get; private set; }
+    public string Email { get; }
 
     public DateTime DateCreated { get; private set; }
 
@@ -70,12 +70,19 @@ public class Contact : INotifyPropertyChanged
         if (obj is not Contact other)
             return false;
 
-        // Telefonszám alapján összehasonlítás
-        return this.Phone == other.Phone;
+        // Telefonszám vagy email alapján összehasonlítás
+        return this.Phone == other.Phone || this.Email == other.Email;
     }
 
     public override int GetHashCode()
     {
-        return Phone.GetHashCode();
+        if (string.IsNullOrEmpty(Phone) && string.IsNullOrEmpty(Email))
+            return 0;
+
+        int phoneHash = Phone?.GetHashCode() ?? 0;
+        int emailHash = Email?.GetHashCode() ?? 0;
+
+        return phoneHash ^ emailHash;
     }
+
 }
