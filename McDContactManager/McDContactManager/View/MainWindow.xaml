@@ -1,13 +1,14 @@
-﻿<Window x:Class="McDContactManager.MainWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:McDContactManager"
-        xmlns:vm="clr-namespace:McDContactManager.ViewModel"
-        xmlns:behaviors="clr-namespace:McDContactManager.Model"
-        mc:Ignorable="d"
-        Title="McD Kontakt Kezelő" Height="900" Width="1600">
+﻿<Window x:Class="McDContactManager.View.MainWindow"
+                      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                      xmlns:local="clr-namespace:McDContactManager"
+                      xmlns:vm="clr-namespace:McDContactManager.ViewModel"
+                      xmlns:behaviors="clr-namespace:McDContactManager.Model"
+                      xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
+                      mc:Ignorable="d"
+                      Title="McD Kontakt Kezelő" Height="900" Width="1600">
     
     <Window.DataContext>
         <vm:MainWindowViewModel />
@@ -31,7 +32,7 @@
         </StackPanel>
         
         <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,0,0,10">
-            <Button Command="{Binding CopySelectedEmailsCommand}" Content="E-mailek másolása vágólapra" Margin="0,0,10,0" Width="210" Height="25"/>
+            <Button Command="{Binding CopySelectedEmailsCommand}" Content="E-mailek másolása vágólapra" Margin="0,0,10,0" Width="210"/>
         </StackPanel>
         
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,0,10">
