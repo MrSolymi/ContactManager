@@ -28,13 +28,9 @@ public class EmailParser
             phone = phoneMatch.Groups[1].Value.Replace(" ", "").Trim();
 
         // Email
-        var emailMatch = Regex.Match(text, @"Email[:：]?\s*(.*?)<b>@<a[^>]*>([^<]+)</a></b>", RegexOptions.IgnoreCase);
+        var emailMatch = Regex.Match(text, @"Email[:：]?\s*<b>([^<]+)</b>", RegexOptions.IgnoreCase);
         if (emailMatch.Success)
-        {
-            string user = Regex.Replace(emailMatch.Groups[1].Value, @"<[^>]*>", "").Trim();
-            string domain = emailMatch.Groups[2].Value.Trim();
-            email = $"{user}@{domain}";
-        }
+            email = emailMatch.Groups[1].Value.Trim();
 
         return (name, phone, email);
     }

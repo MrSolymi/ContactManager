@@ -182,6 +182,16 @@ public class MainWindowViewModel : INotifyPropertyChanged
         
         var emailBodies = await graph.GetEmailTextsFromSenderAsync(_senderEmail, top: 200);
 
+        // foreach (var emailBody in emailBodies)
+        // {
+        //     Console.WriteLine(emailBody);
+        //     var (name, phone, email) = EmailParser.Parse(emailBody);
+        //     Console.WriteLine($"name: {name}, phone: {phone}, email: {email} ");
+        //     Console.WriteLine("\n------------\n");
+        // }
+        //
+        //
+        
         var parsedContacts = new List<Contact>();
 
         foreach (var html in emailBodies)
@@ -232,15 +242,12 @@ public class MainWindowViewModel : INotifyPropertyChanged
     
     private async Task ExecuteLoginCommand()
     {
-        // AuthService inicializálása
         AuthService.Initialize();
 
         try
         {
-            // Token automatikusan kérő credential
             TokenCredential credential = AuthService.Credential;
 
-            // Egyszerű validálás: kérünk 1 token lekérést
             var token = await credential.GetTokenAsync(
                 new TokenRequestContext(new[] { "https://graph.microsoft.com/.default" }),
                 default
