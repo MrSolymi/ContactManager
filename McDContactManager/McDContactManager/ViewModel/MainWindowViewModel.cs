@@ -16,6 +16,8 @@ public class MainWindowViewModel : INotifyPropertyChanged
     public ICommand RefreshCommand { get; }
     public ICommand LoadContactsCommand { get; }
     public ICommand LoginCommand { get; }
+
+    public RelayCommand CopySelectedEmailsCommand { get; }
     public RelayCommand MarkPublishedCommand { get; }
     public RelayCommand MarkHiredCommand { get; }
     public RelayCommand MarkNotPublishedCommand { get; }
@@ -80,16 +82,29 @@ public class MainWindowViewModel : INotifyPropertyChanged
             ApplyFilters();
         }
     }
+
+    public string? SenderEmail
+    {
+        get => _senderEmail;
+        set
+        {
+            _senderEmail = value;
+            OnPropertyChanged(nameof(SenderEmail));
+        }
+    }
     
     private string _nameFilter = "";
     private string _phoneFilter = "";
     private string _emailFilter = "";
     private DateTime? _dateFrom;
     private DateTime? _dateTo = DateTime.Today;
+    private string _senderEmail = "";
     public MainWindowViewModel()
     {
         RefreshCommand = new RelayCommand(async () => await FetchEmailsAsync());
         LoginCommand = new RelayCommand(async () => await ExecuteLoginCommand());
+
+        CopySelectedEmailsCommand = new RelayCommand(ExecuteCopyEmails, CanExecuteCopyEmails);
         
         LoadContactsCommand = new RelayCommand(() => LoadContactsFromDatabase());
         
@@ -135,6 +150,8 @@ public class MainWindowViewModel : INotifyPropertyChanged
         MarkNotPublishedCommand.RaiseCanExecuteChanged();
         MarkHiredCommand.RaiseCanExecuteChanged();
         MarkNotHiredCommand.RaiseCanExecuteChanged();
+        
+        CopySelectedEmailsCommand.RaiseCanExecuteChanged();
     }
     
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -161,9 +178,9 @@ public class MainWindowViewModel : INotifyPropertyChanged
 
         var graph = new GraphService(credential);
         
-        var senderEmail = "solymosiati001220@gmail.com";
+        //var senderEmail = "solymosiati001220@gmail.com";
         
-        var emailBodies = await graph.GetEmailTextsFromSenderAsync(senderEmail, top: 50);
+        var emailBodies = await graph.GetEmailTextsFromSenderAsync(_senderEmail, top: 200);
 
         var parsedContacts = new List<Contact>();
 
@@ -316,7 +333,11 @@ public class MainWindowViewModel : INotifyPropertyChanged
             FilteredContacts.Add(contact);
         }
     }
-    
+
+    private bool CanExecuteCopyEmails()
+    {
+        return SelectedContacts.Count != 0;
+    }
     private bool CanExecuteMarkPublished()
     {
         if (SelectedContacts.Count == 0) return false;
@@ -381,6 +402,21 @@ public class MainWindowViewModel : INotifyPropertyChanged
         return canExecute;
     }
 
+    private void ExecuteCopyEmails()
+    {
+        var selected = SelectedContacts.ToList();
+        
+        if (selected.Count == 0) return;
+
+        //Console.WriteLine($"Selected contacts: {string.Join(", ", selected.Select(c => c.Email))}");
+        
+        var selectedContactsEmails = string.Join("\n", selected.Select(c => c.Email));
+        
+        Clipboard.SetText(selectedContactsEmails);
+
+        Console.WriteLine("Copied to clipboard: " + selectedContactsEmails);
+    }
+    
     private void ExecuteMarkPublished()
     {
         var selected = SelectedContacts.ToList();
