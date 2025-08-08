@@ -5,15 +5,15 @@ using Microsoft.EntityFrameworkCore;
 
 namespace McDContactManager.data;
 
-public class DatabaseContext : DbContext
+public class DatabaseContext(string dbPath) : DbContext
 {
     public DbSet<Contact> Contacts { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        var dbPath = Path.Combine(AppInitializer.AppFolderPath, "contacts.db");
+        //var dbPath = Path.Combine(AppInitializer.AppFolderPath, "contacts.db");
         
-        optionsBuilder.UseSqlite($"Data Source={dbPath}");
+        optionsBuilder.UseSqlite($"Data Source={Path.Combine(AppInitializer.AppFolderPath, dbPath)}");
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -27,5 +27,6 @@ public class DatabaseContext : DbContext
         modelBuilder.Entity<Contact>().Property(c => c.Phone).IsRequired();
         
         modelBuilder.Entity<Contact>().HasIndex(c => c.Phone).IsUnique();
+        modelBuilder.Entity<Contact>().HasIndex(c => c.Email).IsUnique();
     }
 }

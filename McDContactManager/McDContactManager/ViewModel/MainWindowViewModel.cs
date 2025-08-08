@@ -13,10 +13,9 @@ namespace McDContactManager.ViewModel;
 
 public class MainWindowViewModel : INotifyPropertyChanged
 {
-    public ICommand RefreshCommand { get; }
-    public ICommand LoadContactsCommand { get; }
+    //public ICommand LoadContactsCommand { get; }
     public ICommand LoginCommand { get; }
-
+    public RelayCommand RefreshCommand { get; }
     public RelayCommand CopySelectedEmailsCommand { get; }
     public RelayCommand MarkPublishedCommand { get; }
     public RelayCommand MarkHiredCommand { get; }
@@ -90,6 +89,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
         {
             _senderEmail = value;
             OnPropertyChanged(nameof(SenderEmail));
+            RefreshCommand.RaiseCanExecuteChanged();
         }
     }
     
@@ -106,7 +106,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
 
         CopySelectedEmailsCommand = new RelayCommand(ExecuteCopyEmails, CanExecuteCopyEmails);
         
-        LoadContactsCommand = new RelayCommand(() => LoadContactsFromDatabase());
+        //LoadContactsCommand = new RelayCommand(() => LoadContactsFromDatabase());
         
         MarkPublishedCommand = new RelayCommand(ExecuteMarkPublished, CanExecuteMarkPublished);
         MarkHiredCommand = new RelayCommand(ExecuteMarkHired, CanExecuteMarkHired);
@@ -226,14 +226,20 @@ public class MainWindowViewModel : INotifyPropertyChanged
     {
         newContactsCount = 0;
         
-        using var db = new DatabaseContext();
+        using var db = new DatabaseContext("contacts.db");
+        using var dummyDb = new DatabaseContext("dummyContacts.db");
         db.Database.EnsureCreated(); // ez csak akkor hoz létre adatbázist, ha még nincs — jó így
 
         foreach (var contact in contacts)
         {
-            var alreadyExists = db.Contacts.Any(c => c.Phone == contact.Phone);
+            var alreadyExists = db.Contacts.Any(c => c.Phone == contact.Phone) || db.Contacts.Any(c => c.Email == contact.Email);
 
-            if (alreadyExists) continue;
+            if (alreadyExists)
+            {
+                
+                
+                continue;
+            }
             
             newContactsCount++;
             
@@ -291,7 +297,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
                 }
             }
 
-            using var db = new DatabaseContext();
+            using var db = new DatabaseContext("contacts.db");
             var contactsFromDb = db.Contacts.ToList();
 
             AllContacts.Clear();
@@ -435,7 +441,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
         
         if (selected.Count == 0) return;
 
-        using var db = new DatabaseContext();
+        using var db = new DatabaseContext("contacts.db");
 
         foreach (var contact in selected)
         {
@@ -463,7 +469,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
 
         if (selected.Count == 0) return;
 
-        using var db = new DatabaseContext();
+        using var db = new DatabaseContext("contacts.db");
 
         foreach (var contact in selected)
         {
@@ -491,7 +497,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
         
         if (selected.Count == 0) return;
 
-        using var db = new DatabaseContext();
+        using var db = new DatabaseContext("contacts.db");
 
         foreach (var contact in selected)
         {
@@ -519,7 +525,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
 
         if (selected.Count == 0) return;
 
-        using var db = new DatabaseContext();
+        using var db = new DatabaseContext("contacts.db");
 
         foreach (var contact in selected)
         {
