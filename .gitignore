@@ -135,5 +135,6 @@ dist
 .yarn/install-state.gz
 .pnp.*
 
-bin
-obj
+bin/
+obj/
+.idea/
