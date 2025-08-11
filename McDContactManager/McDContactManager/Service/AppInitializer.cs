@@ -1,12 +1,14 @@
 ﻿using System;
 using System.IO;
+using System.Text.Json;
 using System.Windows;
+using McDContactManager.Common;
 
 namespace McDContactManager.Service;
 
 public static class AppInitializer
 {
-    public static string AppFolderPath { get; private set; }
+    public static string AppFolderPath { get; private set; } = null!;
 
     public static void Initialize()
     {
@@ -19,6 +21,8 @@ public static class AppInitializer
             {
                 Directory.CreateDirectory(AppFolderPath);
             }
+            
+            ConfigManager.EnsureExists();
         }
         catch (Exception ex)
         {

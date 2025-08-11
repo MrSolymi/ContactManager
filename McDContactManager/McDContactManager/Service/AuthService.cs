@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Windows;
 using Azure.Core;
 using Azure.Identity;
+using McDContactManager.Common;
 using McDContactManager.data;
 using McDContactManager.Model;
 using Microsoft.Identity.Client;
@@ -18,9 +19,15 @@ public static class AuthService
 
     public static void Initialize()
     {
+        var config = ConfigManager.Load();
+        if (config == null) {
+            Console.WriteLine("Config file is missing.");
+            return;
+        }
+        
         Credential = new InteractiveBrowserCredential(new InteractiveBrowserCredentialOptions
         {
-            ClientId = EnvLoader.Get("CLIENT_ID"),
+            ClientId = config.ClientId,
             RedirectUri = new Uri("http://localhost"),
             TenantId = "common",
             TokenCachePersistenceOptions = new TokenCachePersistenceOptions

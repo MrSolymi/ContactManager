@@ -3,8 +3,12 @@ using System.Data;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Markup;
+using McDContactManager.Common;
 using McDContactManager.data;
+using McDContactManager.Security;
 using McDContactManager.Service;
+using McDContactManager.View;
+using McDContactManager.ViewModel;
 
 namespace McDContactManager;
 
@@ -15,24 +19,40 @@ public partial class App : Application
 {
     protected override void OnStartup(StartupEventArgs e)
     {
-        CultureInfo culture = new CultureInfo("hu-HU");
-        CultureInfo.DefaultThreadCurrentCulture = culture;
-        CultureInfo.DefaultThreadCurrentUICulture = culture;
-
-        FrameworkElement.LanguageProperty.OverrideMetadata(
-            typeof(FrameworkElement),
-            new FrameworkPropertyMetadata(XmlLanguage.GetLanguage(culture.IetfLanguageTag)));
-        
         base.OnStartup(e);
 
-        AppInitializer.Initialize(); // <- Itt történik a mappa létrehozás
+        AppInitializer.Initialize();
         
-        var clientId = EnvLoader.Get("CLIENT_ID");
+        AuthService.Initialize();
+        
+        Current.ShutdownMode = ShutdownMode.OnExplicitShutdown;
 
-        if (string.IsNullOrWhiteSpace(clientId))
+        var config = ConfigManager.Load();
+        
+        if (config == null || !KeyValidator.IsValid(config.ClientId))
         {
-            MessageBox.Show("Hiányzik vagy hibás a .env fájl!");
-            Shutdown();
+            var activationWindow = new ActivationWindow();
+            var result = activationWindow.ShowDialog();
+            
+            if (result != true)
+            {
+                Shutdown();
+                return;
+            }
+            
+            config = ConfigManager.Load();
+            if (config == null || !KeyValidator.IsValid(config.ClientId))
+            {
+                MessageBox.Show("Az aktiválás nem sikerült.");
+                Shutdown();
+                return;
+            }
         }
+        
+        var main = new MainWindow();
+        Current.MainWindow = main;
+        main.Show();
+        
+        Current.ShutdownMode = ShutdownMode.OnMainWindowClose;
     }
 }

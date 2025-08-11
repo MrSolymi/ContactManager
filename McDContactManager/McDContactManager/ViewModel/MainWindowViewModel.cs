@@ -18,7 +18,7 @@ namespace McDContactManager.ViewModel;
 public class MainWindowViewModel : INotifyPropertyChanged
 {
     //public ICommand LoadContactsCommand { get; }
-    public ICommand LoginCommand { get; }
+    public RelayCommand LoginCommand { get; }
     public RelayCommand RefreshCommand { get; }
     public RelayCommand CopySelectedEmailsCommand { get; }
     public RelayCommand MarkPublishedCommand { get; }
@@ -106,7 +106,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
     public MainWindowViewModel()
     {
         RefreshCommand = new RelayCommand(async () => await FetchEmailsAsync(), CanFetchEmails);
-        LoginCommand = new RelayCommand(async () => await ExecuteLoginCommand());
+        LoginCommand = new RelayCommand(async () => await ExecuteLoginCommand(), CanExecuteLoginCommand);
 
         CopySelectedEmailsCommand = new RelayCommand(ExecuteCopyEmails, CanExecuteCopyEmails);
         
@@ -254,11 +254,14 @@ public class MainWindowViewModel : INotifyPropertyChanged
         
         db.SaveChanges();
     }
+
+    private bool CanExecuteLoginCommand()
+    {
+        return !Application.Current.Properties.Contains("Credential");
+    }
     
     private async Task ExecuteLoginCommand()
     {
-        AuthService.Initialize();
-
         try
         {
             TokenCredential credential = AuthService.Credential;
@@ -271,15 +274,8 @@ public class MainWindowViewModel : INotifyPropertyChanged
             if (!string.IsNullOrWhiteSpace(token.Token))
             {
                 App.Current.Properties["Credential"] = credential;
-
-                foreach (Window window in Application.Current.Windows)
-                {
-                    if (window.Title == "Bejelentkezés")
-                    {
-                        window.Close();
-                        break;
-                    }
-                }
+                
+                LoginCommand.RaiseCanExecuteChanged();
             }
         }
         catch (Exception ex)
