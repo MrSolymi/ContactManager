@@ -1,74 +1,60 @@
-# McDContactManager - Email Export és Feldolgozó Alkalmazás
+# McDContactManager – Email alapú kapcsolatkezelő alkalmazás
 
-## Előkészületek
+## Áttekintés
+A **McDContactManager** egy asztali alkalmazás, amely Microsoft Graph API-t használva, OAuth2 hitelesítésen keresztül képes emaileket letölteni és azokból kontaktadatokat kinyerni.  
+A rendszer kizárólag az adott feladói címről érkező, releváns adatokat tartalmazó leveleket dolgozza fel, és a kontaktokat egy helyi adatbázisban tárolja, duplikációk nélkül.  
 
-### 1. Firebird telepítése
-Az alkalmazás használatához szükséges a **Firebird** levelezőkliens telepítése.  
-[Letöltés itt](https://www.mozilla.org/en-US/thunderbird/) (ha még nincs telepítve).
-
-### 2. Bejelentkezés
-Jelentkezz be a Firebirdbe az email fiókoddal.
-
-### 3. Plugin telepítése
-A levelek kimentéséhez szükséges a **ImportExportTools NG** nevű plugin.  
-Ez telepíthető a Firebird menüjében:
-
-- **Kiegészítők és témák**
-- Keresés: `ImportExportTools NG`
-- Telepítés
-
-### 4. Plugin beállítása
-
-- A plugin telepítése után bal felül megjelenik egy saját gombja.
-- Kattints rá -> **Opciók**
-- Az új ablakban:
-  - **Vegyes** fülön ellenőrizd, hogy a *Szöveg és CSV formátum karakterkódolása exportáláskor* `UTF-8` legyen.
-  - A **Mappák exportálása** fülön állítsd be azt a mappát, ahová az emaileket szeretnéd exportálni.
-
-### 5. Email exportálása
-
-- Jobbklikk a bal oldali mappalistában az email fiókon a kívánt mappára
-- Válaszd:  
-  `ImportExportTools NG -> Az összes üzenet exportálása a mappába -> Egyszerű szöveges formátum -> Üzenetek egyetlen fájlként`
-- A felugró ablakokkal nem kell foglalkozni
-
-Ez a lépés létrehoz egy `.txt` fájlt az előzőleg megadott mappában, amely tartalmazza az emailjeidet.
-
-> ⚠️ A plugin telepítését csak egyszer kell elvégezni!
+Az alkalmazás célja, hogy automatizáltan kezelje a beérkező jelentkezéseket, majd kényelmesen szűrhető és módosítható formában jelenítse meg azokat.
 
 ---
 
-## Az alkalmazás használata
+## Használat előtti beállítás
 
-### 1. Indítás
+1. **Kliens ID megadása**  
+   Indításkor az alkalmazás kéri a Microsoft Azure-ban regisztrált alkalmazás **Client ID**-ját.  
+   Érvényes Client ID nélkül az alkalmazás nem használható.
 
-Indítsd el az alkalmazást.
+2. **Hitelesítés**  
+   A bejelentkezés Microsoft fiókkal történik, OAuth2 protokoll segítségével.  
+   Sikeres hitelesítés után az alkalmazás automatikusan hozzáfér az engedélyezett email adatokhoz.
 
-### 2. Funkciók
+---
 
-- **Upload** – A kimentett `.txt` fájl feltöltése
-- **Load** – Az adatok betöltése (általában automatikusan megtörténik)
-- **Update** – Jelenleg nincs funkciója
-- **Mark as Published** – Az adott bejegyzés megjelölése megjelentként
-- **Mark as Hired** – Az adott bejegyzés megjelölése felvettként
-- **Mark as NOT Published** – Megjelölés nem megjelentként
-- **Mark as NOT Hired** – Megjelölés nem felvettként
+## Fő funkciók
 
-### 3. Szűrési lehetőségek
+### 1. Email letöltés és feldolgozás
+- A felhasználó beírhat egy konkrét feladói email címet.
+- Az alkalmazás csak az ettől a címtől érkezett leveleket vizsgálja.
+- Amennyiben a levél tartalmazza a szükséges adatokat (név, telefonszám, email), az bekerül az adatbázisba.
+- **Duplikációkezelés:** minden kontakt csak egyszer szerepelhet az adatbázisban.
 
-A felhasználó az alábbi mezők szerint tud szűrni:
+### 2. Adatvizualizáció
+A kontaktok egy **DataGrid**-ben jelennek meg, ahol:
+- **Szűrés** lehetséges:
+  - név szerint
+  - email cím szerint
+  - telefonszám szerint
+  - bekerülés dátuma alapján (tól–ig intervallum)
+- **Rendezés** bármely oszlop szerint
+- **Többszörös kijelölés** támogatott (`Ctrl + kattintás` vagy `Shift + kattintás`).
 
-- **Name** – név alapján
-- **Phone** – telefonszám alapján
-- **Email** – email alapján
-- **Date from / Date to** – dátumintervallum alapján (az adatbázisba kerülés dátumát nézi)
+### 3. Adatmódosítás
+Minden kontakt esetében beállítható:
+- **Megjelent** – részt vett-e a tájékoztatón
+- **Felvett** – felvételt nyert-e
 
-### 4. Rendezés
+A változtatások azonnal megjelennek az alkalmazásban.
 
-Bármelyik oszlop rendezhető növekvő vagy csökkenő sorrendbe.
+---
+
+## Technikai jellemzők
+- **Microsoft Graph API** integráció
+- **OAuth2** alapú hitelesítés
+- **SQLite** adatbázis tárolás
+- **Valós idejű UI frissítés** – minden módosítás azonnal látszik
+- **Reszponzív felület**
 
 ---
 
 ## Összegzés
-
-Ezzel a folyamattal egyszerűen exportálhatod az emailjeidet szöveges fájlba, majd az alkalmazás segítségével feldolgozhatod és adminisztrálhatod őket.
+A McDContactManager ideális megoldás azoknak, akik automatizáltan szeretnék kezelni a beérkező jelentkezéseket, kiszűrni a releváns adatokat, és ezeket egy könnyen kezelhető, szűrhető és módosítható felületen szeretnék látni.
