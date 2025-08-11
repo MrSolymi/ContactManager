@@ -357,30 +357,26 @@ public class MainWindowViewModel : INotifyPropertyChanged
     
     private bool CanExecuteMarkPublished()
     {
-        if (SelectedContacts.Count == 0) return false;
-        
-        return SelectedContacts.Any(c => c.Published != true);
+        var s = BulkStateHelper.GetBulkState(SelectedContacts, c => c.Published);
+        return s == BulkState.AllFalse || s == BulkState.AllNull;
     }
 
     private bool CanExecuteMarkHired()
     {
-        if (SelectedContacts.Count == 0) return false;
-        
-        return SelectedContacts.Any(c => c.Hired != true);
+        var s = BulkStateHelper.GetBulkState(SelectedContacts, c => c.Hired);
+        return s == BulkState.AllFalse || s == BulkState.AllNull;
     }
 
     private bool CanExecuteMarkNotPublished()
     {
-        if (SelectedContacts.Count == 0) return false;
-
-        return SelectedContacts.Any(c => c.Published == true);
+        var s = BulkStateHelper.GetBulkState(SelectedContacts, c => c.Published);
+        return s == BulkState.AllTrue || s == BulkState.AllNull;
     }
     
     private bool CanExecuteMarkNotHired()
     {
-        if (SelectedContacts.Count == 0) return false;
-        
-        return SelectedContacts.Any(c => c.Hired == true);
+        var s = BulkStateHelper.GetBulkState(SelectedContacts, c => c.Hired);
+        return s == BulkState.AllTrue || s == BulkState.AllNull;
     }
 
     private void ExecuteCopyEmails()
