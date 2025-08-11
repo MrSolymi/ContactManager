@@ -1,14 +1,8 @@
-﻿using System.Configuration;
-using System.Data;
-using System.Globalization;
-using System.Windows;
-using System.Windows.Markup;
+﻿using System.Windows;
 using McDContactManager.Common;
-using McDContactManager.data;
 using McDContactManager.Security;
 using McDContactManager.Service;
 using McDContactManager.View;
-using McDContactManager.ViewModel;
 
 namespace McDContactManager;
 

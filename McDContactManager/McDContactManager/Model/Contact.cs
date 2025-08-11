@@ -1,5 +1,4 @@
-﻿using System;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -63,7 +62,8 @@ public class Contact : INotifyPropertyChanged
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
-    protected void OnPropertyChanged(string propertyName)
+
+    private void OnPropertyChanged(string propertyName)
         => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
     public override bool Equals(object? obj)
@@ -72,7 +72,7 @@ public class Contact : INotifyPropertyChanged
             return false;
 
         // Telefonszám vagy email alapján összehasonlítás
-        return this.Phone == other.Phone || this.Email == other.Email;
+        return Phone == other.Phone || Email == other.Email;
     }
 
     public override int GetHashCode()
@@ -80,8 +80,8 @@ public class Contact : INotifyPropertyChanged
         if (string.IsNullOrEmpty(Phone) && string.IsNullOrEmpty(Email))
             return 0;
 
-        int phoneHash = Phone?.GetHashCode() ?? 0;
-        int emailHash = Email?.GetHashCode() ?? 0;
+        var phoneHash = Phone?.GetHashCode() ?? 0;
+        var emailHash = Email?.GetHashCode() ?? 0;
 
         return phoneHash ^ emailHash;
     }

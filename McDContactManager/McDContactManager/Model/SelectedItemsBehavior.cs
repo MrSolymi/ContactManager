@@ -37,7 +37,7 @@ public class SelectedItemsBehavior
         if (sender is DataGrid dataGrid)
         {
             var selectedItems = GetBindableSelectedItems(dataGrid);
-            selectedItems?.Clear();
+            selectedItems.Clear();
 
             foreach (var item in dataGrid.SelectedItems)
             {

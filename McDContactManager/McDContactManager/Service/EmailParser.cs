@@ -7,9 +7,9 @@ public class EmailParser
 {
     public static (string Name, string Phone, string Email) Parse(string htmlBody)
     {
-        string name = "";
-        string phone = "";
-        string email = "";
+        var name = "";
+        var phone = "";
+        var email = "";
 
         // HTML entity decode
         var text = WebUtility.HtmlDecode(htmlBody);

@@ -1,18 +1,13 @@
 ﻿using System.ComponentModel;
-using System.IO;
-using System.Windows.Input;
 using McDContactManager.Common;
 using McDContactManager.Model;
 using McDContactManager.Security;
-using McDContactManager.Service;
 
 namespace McDContactManager.ViewModel;
 
 public class ActivationWindowViewModel : INotifyPropertyChanged
 {
     public RelayCommand ActivationCommand { get; }
-    
-    public static bool IsActivated { get; private set; }
     
     private string _activationKey = "";
     public string ActivationKey
@@ -37,7 +32,7 @@ public class ActivationWindowViewModel : INotifyPropertyChanged
 
     private void ExecuteActivationCommand()
     {
-        var input = (_activationKey ?? "").Trim();
+        var input = _activationKey.Trim();
         
         if (KeyValidator.IsValid(input))
         {

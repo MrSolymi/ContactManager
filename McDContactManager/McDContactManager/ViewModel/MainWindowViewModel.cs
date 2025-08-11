@@ -1,13 +1,7 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Input;
 using Azure.Core;
 using McDContactManager.data;
 using McDContactManager.Model;
@@ -17,7 +11,6 @@ namespace McDContactManager.ViewModel;
 
 public class MainWindowViewModel : INotifyPropertyChanged
 {
-    //public ICommand LoadContactsCommand { get; }
     public RelayCommand LoginCommand { get; }
     public RelayCommand RefreshCommand { get; }
     public RelayCommand CopySelectedEmailsCommand { get; }
@@ -31,6 +24,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
     public ObservableCollection<Contact> SelectedContacts { get; } = new();
 
     
+    private string _nameFilter = "";
     public string NameFilter
     {
         get => _nameFilter;
@@ -42,6 +36,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
         }
     }
     
+    private string _phoneFilter = "";
     public string PhoneFilter
     {
         get => _phoneFilter;
@@ -53,6 +48,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
         }
     }
 
+    private string _emailFilter = "";
     public string EmailFilter
     {
         get => _emailFilter;
@@ -64,6 +60,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
         }
     }
     
+    private DateTime? _dateFrom;
     public DateTime? DateFrom
     {
         get => _dateFrom;
@@ -75,6 +72,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
         }
     }
     
+    private DateTime? _dateTo = DateTime.Today;
     public DateTime? DateTo
     {
         get => _dateTo;
@@ -86,23 +84,18 @@ public class MainWindowViewModel : INotifyPropertyChanged
         }
     }
 
+    private string _senderEmail = "";
     public string? SenderEmail
     {
         get => _senderEmail;
         set
         {
-            _senderEmail = value;
+            _senderEmail = value ?? "";
             OnPropertyChanged(nameof(SenderEmail));
             RefreshCommand.RaiseCanExecuteChanged();
         }
     }
     
-    private string _nameFilter = "";
-    private string _phoneFilter = "";
-    private string _emailFilter = "";
-    private DateTime? _dateFrom;
-    private DateTime? _dateTo = DateTime.Today;
-    private string _senderEmail = "";
     public MainWindowViewModel()
     {
         RefreshCommand = new RelayCommand(async () => await FetchEmailsAsync(), CanFetchEmails);
@@ -110,14 +103,12 @@ public class MainWindowViewModel : INotifyPropertyChanged
 
         CopySelectedEmailsCommand = new RelayCommand(ExecuteCopyEmails, CanExecuteCopyEmails);
         
-        //LoadContactsCommand = new RelayCommand(() => LoadContactsFromDatabase());
-        
         MarkPublishedCommand = new RelayCommand(ExecuteMarkPublished, CanExecuteMarkPublished);
         MarkHiredCommand = new RelayCommand(ExecuteMarkHired, CanExecuteMarkHired);
         MarkNotPublishedCommand = new RelayCommand(ExecuteMarkNotPublished, CanExecuteMarkNotPublished);
         MarkNotHiredCommand = new RelayCommand(ExecuteMarkNotHired, CanExecuteMarkNotHired);
             
-        SelectedContacts.CollectionChanged += (s, e) =>
+        SelectedContacts.CollectionChanged += (_, e) =>
         {
             if (e.NewItems != null)
             {
@@ -160,7 +151,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
     
     public event PropertyChangedEventHandler? PropertyChanged;
 
-    protected void OnPropertyChanged(string propertyName)
+    private void OnPropertyChanged(string propertyName)
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
@@ -172,13 +163,13 @@ public class MainWindowViewModel : INotifyPropertyChanged
     
     private async Task FetchEmailsAsync()
     {
-        if (!App.Current.Properties.Contains("Credential"))
+        if (!Application.Current.Properties.Contains("Credential"))
         {
             MessageBox.Show("Nincs bejelentkezve.");
             return;
         }
 
-        var credential = App.Current.Properties["Credential"] as TokenCredential;
+        var credential = Application.Current.Properties["Credential"] as TokenCredential;
         if (credential == null)
         {
             MessageBox.Show("Credential null.");
@@ -187,19 +178,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
 
         var graph = new GraphService(credential);
         
-        //var senderEmail = "solymosiati001220@gmail.com";
-        
         var emailBodies = await graph.GetEmailTextsFromSenderAsync(_senderEmail, top: 200);
-
-        // foreach (var emailBody in emailBodies)
-        // {
-        //     Console.WriteLine(emailBody);
-        //     var (name, phone, email) = EmailParser.Parse(emailBody);
-        //     Console.WriteLine($"name: {name}, phone: {phone}, email: {email} ");
-        //     Console.WriteLine("\n------------\n");
-        // }
-        //
-        //
         
         var parsedContacts = new List<Contact>();
 
@@ -220,8 +199,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
             }
         }
 
-        int newContactsCount;
-        SaveContactsToDatabase(parsedContacts, out newContactsCount);
+        SaveContactsToDatabase(parsedContacts, out var newContactsCount);
 
         MessageBox.Show($"Sikeresen beolvasva {newContactsCount} új kontakt.", "Siker", MessageBoxButton.OK, MessageBoxImage.Information);
     }
@@ -232,7 +210,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
         
         using var db = new DatabaseContext("contacts.db");
         using var dummyDb = new DatabaseContext("dummyContacts.db");
-        db.Database.EnsureCreated(); // ez csak akkor hoz létre adatbázist, ha még nincs — jó így
+        db.Database.EnsureCreated();
 
         foreach (var contact in contacts)
         {
@@ -240,8 +218,6 @@ public class MainWindowViewModel : INotifyPropertyChanged
 
             if (alreadyExists)
             {
-                
-                
                 continue;
             }
             
@@ -264,18 +240,22 @@ public class MainWindowViewModel : INotifyPropertyChanged
     {
         try
         {
-            TokenCredential credential = AuthService.Credential;
+            TokenCredential? credential = AuthService.Credential;
 
-            var token = await credential.GetTokenAsync(
-                new TokenRequestContext(new[] { "https://graph.microsoft.com/.default" }),
-                default
-            );
 
-            if (!string.IsNullOrWhiteSpace(token.Token))
+            if (credential != null)
             {
-                App.Current.Properties["Credential"] = credential;
+                var token = await credential.GetTokenAsync(
+                    new TokenRequestContext(["https://graph.microsoft.com/.default"]),
+                    CancellationToken.None
+                );
+
+                if (!string.IsNullOrWhiteSpace(token.Token))
+                {
+                    Application.Current.Properties["Credential"] = credential;
                 
-                LoginCommand.RaiseCanExecuteChanged();
+                    LoginCommand.RaiseCanExecuteChanged();
+                }
             }
         }
         catch (Exception ex)
