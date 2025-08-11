@@ -6,9 +6,6 @@ namespace McDContactManager.Model;
 
 public class Contact : INotifyPropertyChanged
 {
-    private bool _published;
-    private bool _hired;
-
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int Id { get; set; }
@@ -21,17 +18,20 @@ public class Contact : INotifyPropertyChanged
 
     public DateTime DateCreated { get; private set; }
 
-    public bool Published
+    private bool? _published;
+    public bool? Published
     {
         get => _published;
         set
         {
             _published = value;
             OnPropertyChanged(nameof(Published));
+            OnPropertyChanged(nameof(PublishedDisplay));
         }
     }
 
-    public bool Hired
+    private bool? _hired;
+    public bool? Hired
     {
         get => _hired;
         set
@@ -39,17 +39,24 @@ public class Contact : INotifyPropertyChanged
             if (value == _hired) return;
             _hired = value;
             OnPropertyChanged(nameof(Hired));
+            OnPropertyChanged(nameof(HiredDisplay));
         }
     }
 
+    // Csak megjelenítésre a DataGridben:
+    [NotMapped]
+    public string PublishedDisplay => Published is null ? "" : (Published.Value ? "Igen" : "Nem");
+
+    [NotMapped]
+    public string HiredDisplay => Hired is null ? "" : (Hired.Value ? "Igen" : "Nem");
     public Contact(string name, string phone, string email)
     {
         Name = name;
         Phone = phone;
         Email = email;
         DateCreated = DateTime.Today;
-        Published = false;
-        Hired = false;
+        Published = null;
+        Hired = null;
     }
 
     private Contact()

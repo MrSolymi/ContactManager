@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.IO;
 using System.Windows;
+using System.Windows.Data;
 using Azure.Core;
 using McDContactManager.data;
 using McDContactManager.Model;
@@ -96,6 +97,21 @@ public class MainWindowViewModel : INotifyPropertyChanged
         }
     }
     
+    private bool _onlyUnreviewed;
+    public bool OnlyUnreviewed
+    {
+        get => _onlyUnreviewed;
+        set
+        {
+            if (_onlyUnreviewed == value) return;
+            _onlyUnreviewed = value;
+            OnPropertyChanged(nameof(OnlyUnreviewed));
+            ApplyFilters();
+        }
+    }
+
+    private ICollectionView _view;
+    
     public MainWindowViewModel()
     {
         RefreshCommand = new RelayCommand(async () => await FetchEmailsAsync(), CanFetchEmails);
@@ -129,8 +145,41 @@ public class MainWindowViewModel : INotifyPropertyChanged
         };
         
         LoadContactsFromDatabase(silent: true);
+        
+        _view = CollectionViewSource.GetDefaultView(FilteredContacts);
+        _view.Filter = MatchesFilters;
+        
+        if (_view is ICollectionViewLiveShaping live)
+        {
+            live.IsLiveFiltering = true;
+            live.LiveFilteringProperties.Add(nameof(Contact.Published));
+            live.LiveFilteringProperties.Add(nameof(Contact.Hired));
+        }
     }
     
+    private bool MatchesFilters(object obj)
+    {
+        if (obj is not Contact c) return false;
+
+        if (!string.IsNullOrWhiteSpace(NameFilter) &&
+            !c.Name.Contains(NameFilter, StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        if (!string.IsNullOrWhiteSpace(PhoneFilter) &&
+            !c.Phone.Contains(PhoneFilter, StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        if (!string.IsNullOrWhiteSpace(EmailFilter) &&
+            !c.Email.Contains(EmailFilter, StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        if (DateFrom.HasValue && c.DateCreated < DateFrom.Value) return false;
+        if (DateTo.HasValue && c.DateCreated > DateTo.Value) return false;
+
+        if (OnlyUnreviewed && !(c.Published == null || c.Hired == null)) return false;
+
+        return true;
+    }
     private void SelectedContact_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(Contact.Published) || e.PropertyName == nameof(Contact.Hired))
@@ -298,106 +347,40 @@ public class MainWindowViewModel : INotifyPropertyChanged
     
     private void ApplyFilters()
     {
-        FilteredContacts.Clear();
-
-        var query = AllContacts.AsEnumerable();
-
-        if (!string.IsNullOrWhiteSpace(NameFilter))
-        {
-            query = query.Where(c => c.Name.Contains(NameFilter, StringComparison.OrdinalIgnoreCase));
-        }
-        
-        if (!string.IsNullOrWhiteSpace(PhoneFilter))
-        {
-            query = query.Where(c => c.Phone.Contains(PhoneFilter, StringComparison.OrdinalIgnoreCase));
-        }
-        
-        if (!string.IsNullOrWhiteSpace(EmailFilter))
-        {
-            query = query.Where(c => c.Email.Contains(EmailFilter, StringComparison.OrdinalIgnoreCase));
-        }
-        
-        if (DateFrom.HasValue)
-        {
-            query = query.Where(c => c.DateCreated >= DateFrom.Value);
-        }
-        if (DateTo.HasValue)
-        {
-            query = query.Where(c => c.DateCreated <= DateTo.Value);
-        }
-
-        foreach (var contact in query)
-        {
-            FilteredContacts.Add(contact);
-        }
+        _view.Refresh();
     }
 
     private bool CanExecuteCopyEmails()
     {
         return SelectedContacts.Count != 0;
     }
+    
     private bool CanExecuteMarkPublished()
     {
         if (SelectedContacts.Count == 0) return false;
         
-        var canExecute = false;
-        foreach (var contact in SelectedContacts)
-        {
-            if (!contact.Published)
-            {
-                canExecute = true;
-            }
-        }
-        
-        return canExecute;
+        return SelectedContacts.Any(c => c.Published != true);
     }
 
     private bool CanExecuteMarkHired()
     {
         if (SelectedContacts.Count == 0) return false;
         
-        var canExecute = false;
-        foreach (var contact in SelectedContacts)
-        {
-            if (!contact.Hired)
-            {
-                canExecute = true;
-            }
-        }
-        
-        return canExecute;
+        return SelectedContacts.Any(c => c.Hired != true);
     }
 
     private bool CanExecuteMarkNotPublished()
     {
         if (SelectedContacts.Count == 0) return false;
 
-        var canExecute = false;
-        foreach (var contact in SelectedContacts)
-        {
-            if (contact.Published)
-            {
-                canExecute = true;
-            }
-        }
-        
-        return canExecute;
+        return SelectedContacts.Any(c => c.Published == true);
     }
     
     private bool CanExecuteMarkNotHired()
     {
         if (SelectedContacts.Count == 0) return false;
         
-        var canExecute = false;
-        foreach (var contact in SelectedContacts)
-        {
-            if (contact.Hired)
-            {
-                canExecute = true;
-            }
-        }
-        
-        return canExecute;
+        return SelectedContacts.Any(c => c.Hired == true);
     }
 
     private void ExecuteCopyEmails()
@@ -433,14 +416,9 @@ public class MainWindowViewModel : INotifyPropertyChanged
         }
 
         db.SaveChanges();
-
-        foreach (var contact in FilteredContacts)
-        {
-            if (selected.Any(s => s.Id == contact.Id))
-            {
-                contact.Published = true;
-            }
-        }
+        
+        foreach (var contact in FilteredContacts.Where(f => selected.Any(s => s.Id == f.Id)))
+            contact.Published = true;
     }
     
     private void ExecuteMarkHired()
@@ -462,13 +440,8 @@ public class MainWindowViewModel : INotifyPropertyChanged
 
         db.SaveChanges();
 
-        foreach (var contact in FilteredContacts)
-        {
-            if (selected.Any(s => s.Id == contact.Id))
-            {
-                contact.Hired = true; // ez triggereli a UI-t
-            }
-        }
+        foreach (var contact in FilteredContacts.Where(f => selected.Any(s => s.Id == f.Id)))
+            contact.Hired = true;
     }
     
     private void ExecuteMarkNotPublished()
@@ -490,13 +463,8 @@ public class MainWindowViewModel : INotifyPropertyChanged
 
         db.SaveChanges();
 
-        foreach (var contact in FilteredContacts)
-        {
-            if (selected.Any(s => s.Id == contact.Id))
-            {
-                contact.Published = false;
-            }
-        }
+        foreach (var contact in FilteredContacts.Where(f => selected.Any(s => s.Id == f.Id)))
+            contact.Published = false;
     }
     
     private void ExecuteMarkNotHired()
@@ -518,12 +486,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
 
         db.SaveChanges();
 
-        foreach (var contact in FilteredContacts)
-        {
-            if (selected.Any(s => s.Id == contact.Id))
-            {
-                contact.Hired = false; // ez triggereli a UI-t
-            }
-        }
+        foreach (var contact in FilteredContacts.Where(f => selected.Any(s => s.Id == f.Id)))
+            contact.Hired = false;
     }
 }

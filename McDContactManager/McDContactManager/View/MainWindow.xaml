@@ -58,6 +58,11 @@
             
             <Label Content="Dátum -ig:" VerticalAlignment="Center"/>
             <DatePicker SelectedDate="{Binding DateTo}" Width="140" Margin="5,0,15,0"/>
+            
+            <CheckBox Content="Hiányos kontaktok megjelenítése (Megjelent/Felvett)"
+                      IsChecked="{Binding OnlyUnreviewed}"
+                      VerticalAlignment="Center"
+                      Margin="5,0,0,0"/>
         </StackPanel>
 
         <!-- DataGrid -->
@@ -87,10 +92,10 @@
                                     Binding="{Binding DateCreated, Mode=OneWay, StringFormat='yyyy. MM. dd'}" Width="*" CanUserResize="False"/>
                 
                 <DataGridTextColumn Header="Megjelent" 
-                                    Binding="{Binding Published, Mode=OneWay}" IsReadOnly="True" Width="80" CanUserResize="False"/>
+                                    Binding="{Binding PublishedDisplay, Mode=OneWay}" IsReadOnly="True" Width="80" CanUserResize="False"/>
                 
                 <DataGridTextColumn Header="Felvett" 
-                                    Binding="{Binding Hired, Mode=OneWay}" IsReadOnly="True" Width="80" CanUserResize="False"/>
+                                    Binding="{Binding HiredDisplay, Mode=OneWay}" IsReadOnly="True" Width="80" CanUserResize="False"/>
             </DataGrid.Columns>
         </DataGrid>
     </Grid>
