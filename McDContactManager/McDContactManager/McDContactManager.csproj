@@ -24,10 +24,4 @@
       <PackageReference Include="Microsoft.Graph" Version="5.87.0" />
       <PackageReference Include="Microsoft.Identity.Client" Version="4.74.1" />
     </ItemGroup>
-
-    <ItemGroup>
-        <None Update=".env">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-    </ItemGroup>
 </Project>
