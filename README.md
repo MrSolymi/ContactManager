@@ -35,6 +35,7 @@ A kontaktok egy **DataGrid**-ben jelennek meg, ahol:
   - email cím szerint
   - telefonszám szerint
   - bekerülés dátuma alapján (tól–ig intervallum)
+  - **Új funkció:** csak a felülvizsgálatlan rekordok szűrése (olyan kontaktok, ahol a *Megjelent* vagy *Felvett* mező még nem lett beállítva)
 - **Rendezés** bármely oszlop szerint
 - **Többszörös kijelölés** támogatott (`Ctrl + kattintás` vagy `Shift + kattintás`).
 
@@ -43,7 +44,14 @@ Minden kontakt esetében beállítható:
 - **Megjelent** – részt vett-e a tájékoztatón
 - **Felvett** – felvételt nyert-e
 
-A változtatások azonnal megjelennek az alkalmazásban.
+#### Új módosítási logika
+- A státusz mezők (`Megjelent` / `Felvett`) alapértelmezésben üresek (null), ha még nem történt módosítás.
+- Tömegműveletek esetén a rendszer csak akkor engedi a módosítást, ha a kijelölt elemek állapota egységes:
+  - `null` → állítható `true`-ra vagy `false`-ra.
+  - `true` → állítható `false`-ra.
+  - `false` → állítható `true`-ra.
+  - Vegyes állapot (pl. van `true` és `false` is egyszerre) → a művelet letiltva.
+- A **"Csak felülvizsgálatlanok"** szűrő bekapcsolása esetén, ha egy elem státusza módosul, a rendszer automatikusan frissíti a nézetet és eltávolítja a listából a már beállított rekordot.
 
 ---
 
@@ -53,8 +61,10 @@ A változtatások azonnal megjelennek az alkalmazásban.
 - **SQLite** adatbázis tárolás
 - **Valós idejű UI frissítés** – minden módosítás azonnal látszik
 - **Reszponzív felület**
+- **Live Filtering támogatás** – a szűrők automatikusan frissülnek státuszváltozás esetén
 
 ---
 
 ## Összegzés
-A McDContactManager ideális megoldás azoknak, akik automatizáltan szeretnék kezelni a beérkező jelentkezéseket, kiszűrni a releváns adatokat, és ezeket egy könnyen kezelhető, szűrhető és módosítható felületen szeretnék látni.
+A McDContactManager ideális megoldás azoknak, akik automatizáltan szeretnék kezelni a beérkező jelentkezéseket, kiszűrni a releváns adatokat, és ezeket egy könnyen kezelhető, szűrhető és módosítható felületen szeretnék látni.  
+Az új szűrési és tömegműveleti logika segítségével a feldolgozás még gyorsabbá és hibamentesebbé válik.
