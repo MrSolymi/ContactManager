@@ -17,14 +17,19 @@ public partial class App : Application
 
         AppInitializer.Initialize();
         
-        AuthService.Initialize();
-        
-        Current.ShutdownMode = ShutdownMode.OnExplicitShutdown;
-
+        ConfigManager.EnsureExists();
         var config = ConfigManager.Load();
+        
+        // AuthService.Initialize();
+        //
+        // Current.ShutdownMode = ShutdownMode.OnExplicitShutdown;
+        //
+        // var config = ConfigManager.Load();
         
         if (config == null || !KeyValidator.IsValid(config.ClientId))
         {
+            Current.ShutdownMode = ShutdownMode.OnExplicitShutdown;
+            
             var activationWindow = new ActivationWindow();
             var result = activationWindow.ShowDialog();
             
@@ -41,12 +46,16 @@ public partial class App : Application
                 Shutdown();
                 return;
             }
+            
+            Current.ShutdownMode = ShutdownMode.OnMainWindowClose;
         }
+        
+        AuthService.Initialize();
         
         var main = new MainWindow();
         Current.MainWindow = main;
         main.Show();
         
-        Current.ShutdownMode = ShutdownMode.OnMainWindowClose;
+        //Current.ShutdownMode = ShutdownMode.OnMainWindowClose;
     }
 }

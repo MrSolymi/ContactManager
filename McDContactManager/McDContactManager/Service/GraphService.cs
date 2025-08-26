@@ -8,9 +8,9 @@ public class GraphService
 {
     private readonly GraphServiceClient _graphClient;
 
-    public GraphService(TokenCredential  credential)
+    public GraphService(TokenCredential credential)
     {
-        _graphClient = new GraphServiceClient(credential);
+        _graphClient = new GraphServiceClient(credential, AuthService.Scopes);
     }
 
     public async Task<List<Message>> GetEmailsAsync(int top = 10)
@@ -93,6 +93,24 @@ public class GraphService
         {
             Console.WriteLine($"Graph API error: {ex.Message}");
             return new List<string>();
+        }
+    }
+    
+    public async Task<(string? DisplayName, string? UserPrincipalName, string? Mail)> GetMeAsync()
+    {
+        try
+        {
+            var me = await _graphClient.Me.GetAsync(options =>
+            {
+                options.QueryParameters.Select = new[] { "displayName", "userPrincipalName", "mail" };
+            });
+
+            return (me?.DisplayName, me?.UserPrincipalName, me?.Mail);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Graph API error (/me): {ex.Message}");
+            return (null, null, null);
         }
     }
 }

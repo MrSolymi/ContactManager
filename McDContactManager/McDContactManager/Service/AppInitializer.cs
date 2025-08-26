@@ -6,7 +6,7 @@ namespace McDContactManager.Service;
 
 public static class AppInitializer
 {
-    public static string AppFolderPath { get; private set; } = null!;
+    public static string? AppFolderPath { get; private set; }
 
     public static void Initialize()
     {
@@ -15,12 +15,7 @@ public static class AppInitializer
 
         try
         {
-            if (!Directory.Exists(AppFolderPath))
-            {
-                Directory.CreateDirectory(AppFolderPath);
-            }
-            
-            ConfigManager.EnsureExists();
+            Directory.CreateDirectory(AppFolderPath);
         }
         catch (Exception ex)
         {

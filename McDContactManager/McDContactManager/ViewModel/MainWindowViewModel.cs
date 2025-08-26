@@ -26,6 +26,33 @@ public class MainWindowViewModel : INotifyPropertyChanged
     public ObservableCollection<Contact> SelectedContacts { get; } = new();
 
     
+    private bool _isLoggedIn;
+    public bool IsLoggedIn
+    {
+        get => _isLoggedIn;
+        private set
+        {
+            if (_isLoggedIn == value) return;
+            _isLoggedIn = value;
+            OnPropertyChanged(nameof(IsLoggedIn));
+            OnPropertyChanged(nameof(StatusText));
+        }
+    }
+
+    private string _loggedInUser = "";
+    public string LoggedInUser
+    {
+        get => _loggedInUser;
+        private set
+        {
+            if (_loggedInUser == value) return;
+            _loggedInUser = value;
+            OnPropertyChanged(nameof(LoggedInUser));
+            OnPropertyChanged(nameof(StatusText));
+        }
+    }
+    public string StatusText => IsLoggedIn ? $"Bejelentkezve: {LoggedInUser}" : "Nincs bejelentkezve";
+    
     private string _nameFilter = "";
     public string NameFilter
     {
@@ -301,23 +328,37 @@ public class MainWindowViewModel : INotifyPropertyChanged
     {
         try
         {
-            TokenCredential? credential = AuthService.Credential;
-
-
-            if (credential != null)
+            var ok = await AuthService.EnsureSignedInAsync();
+            
+            if (!ok)
             {
-                var token = await credential.GetTokenAsync(
-                    new TokenRequestContext(["https://graph.microsoft.com/.default"]),
-                    CancellationToken.None
-                );
+                MessageBox.Show("Bejelentkezés sikertelen.", "Hiba",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
 
-                if (!string.IsNullOrWhiteSpace(token.Token))
-                {
-                    Application.Current.Properties["Credential"] = credential;
-                
-                    LoginCommand.RaiseCanExecuteChanged();
-                    RefreshCommand.RaiseCanExecuteChanged();
-                }
+            Application.Current.Properties["Credential"] = AuthService.Credential;
+            
+            LoginCommand.RaiseCanExecuteChanged();
+            RefreshCommand.RaiseCanExecuteChanged();
+            
+            try
+            {
+                var graph = new GraphService(AuthService.Credential);
+                var me = await graph.GetMeAsync();
+                var name = me.DisplayName
+                           ?? me.Mail
+                           ?? me.UserPrincipalName
+                           ?? "ismeretlen felhasználó";
+
+                LoggedInUser = name;
+                IsLoggedIn = true;
+            }
+            catch
+            {
+                // ha valamiért /me nem sikerül, legalább jelezzük, hogy logged-in
+                IsLoggedIn = true;
+                LoggedInUser = "bejelentkezve";
             }
         }
         catch (Exception ex)

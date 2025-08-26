@@ -18,6 +18,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/> <!-- Gombok -->
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/> <!-- Másolók -->
             <RowDefinition Height="Auto"/> <!-- Szűrők -->
             <RowDefinition Height="*"/>    <!-- DataGrid -->
@@ -32,10 +33,25 @@
         </StackPanel>
         
         <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,0,0,10">
+            <Label Content="{Binding StatusText}">
+                <Label.Style>
+                    <Style TargetType="Label">
+                        <Setter Property="Foreground" Value="Tomato"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsLoggedIn}" Value="True">
+                                <Setter Property="Foreground" Value="LimeGreen"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Label.Style>
+            </Label>
+        </StackPanel>
+        
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,0,0,10">
             <Button Command="{Binding CopySelectedEmailsCommand}" Content="E-mailek másolása vágólapra" Margin="0,0,10,0" Width="210"/>
         </StackPanel>
         
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,0,10">
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,0,10">
             <Button Command="{Binding MarkPublishedCommand}" Content="Megjelent" Margin="0,0,10,0" Width="140"/>
             <Button Command="{Binding MarkNotPublishedCommand}" Content="Nem jelent meg" Margin="0,0,10,0" Width="140"/>
             <Button Command="{Binding MarkHiredCommand}" Content="Felvett" Margin="0,0,10,0" Width="140"/>
@@ -43,7 +59,7 @@
         </StackPanel>
 
         <!-- Szűrők -->
-        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,0,0,10">
+        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,0,0,10">
             <Label Content="Név:" VerticalAlignment="Center"/>
             <TextBox Text="{Binding NameFilter, UpdateSourceTrigger=PropertyChanged}" Width="120" Margin="5,0,15,0"/>
 
@@ -66,7 +82,7 @@
         </StackPanel>
 
         <!-- DataGrid -->
-        <DataGrid Grid.Row="4" 
+        <DataGrid Grid.Row="5" 
                   ItemsSource="{Binding FilteredContacts}" 
                   behaviors:SelectedItemsBehavior.BindableSelectedItems="{Binding SelectedContacts}" 
                   AutoGenerateColumns="False" 
