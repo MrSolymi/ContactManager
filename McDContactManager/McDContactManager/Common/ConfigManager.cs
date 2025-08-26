@@ -48,7 +48,8 @@ public static class ConfigManager
         
         var defaultConfig = new AppConfig
         {
-            ClientId = ""
+            ClientId = "",
+            LastUsedSenderAddress = ""
         };
         Save(defaultConfig);
     }

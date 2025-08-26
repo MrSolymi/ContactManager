@@ -4,6 +4,7 @@ using System.IO;
 using System.Windows;
 using System.Windows.Data;
 using Azure.Core;
+using McDContactManager.Common;
 using McDContactManager.data;
 using McDContactManager.Model;
 using McDContactManager.Service;
@@ -155,6 +156,13 @@ public class MainWindowViewModel : INotifyPropertyChanged
             live.LiveFilteringProperties.Add(nameof(Contact.Published));
             live.LiveFilteringProperties.Add(nameof(Contact.Hired));
         }
+        
+        var config = ConfigManager.Load() ?? new AppConfig();
+        if (!string.IsNullOrEmpty(config.LastUsedSenderAddress))
+        {
+            SenderEmail = config.LastUsedSenderAddress;
+        }
+
     }
     
     private bool MatchesFilters(object obj)
@@ -207,7 +215,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
 
     private bool CanFetchEmails()
     {
-        return !string.IsNullOrEmpty(_senderEmail);
+        return !string.IsNullOrEmpty(_senderEmail) && Application.Current.Properties["Credential"] != null;
     }
     
     private async Task FetchEmailsAsync()
@@ -225,6 +233,10 @@ public class MainWindowViewModel : INotifyPropertyChanged
             return;
         }
 
+        var config = ConfigManager.Load() ?? new AppConfig();
+        config.LastUsedSenderAddress = _senderEmail;
+        ConfigManager.Save(config);
+        
         var graph = new GraphService(credential);
         
         var emailBodies = await graph.GetEmailTextsFromSenderAsync(_senderEmail, top: 200);
@@ -304,6 +316,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
                     Application.Current.Properties["Credential"] = credential;
                 
                     LoginCommand.RaiseCanExecuteChanged();
+                    RefreshCommand.RaiseCanExecuteChanged();
                 }
             }
         }
