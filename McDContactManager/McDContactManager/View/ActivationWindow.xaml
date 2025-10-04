@@ -14,8 +14,9 @@
     
     <Grid>
         <StackPanel Margin="20">
-            <TextBlock Text="Írd be az aktiváló kulcsot:" Margin="0,0,0,10"/>
-            <TextBox Text="{Binding ActivationKey, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,10"/>
+            <TextBlock Text="Írd be a kliens id-t és kliens secret-et:" Margin="0,0,0,10"/>
+            <TextBox Text="{Binding ActivationId, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,10"/>
+            <TextBox Text="{Binding ActivationSecret, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,10"/>
             <Button Content="Aktiválás" Command="{Binding ActivationCommand}"/>
         </StackPanel>
     </Grid>

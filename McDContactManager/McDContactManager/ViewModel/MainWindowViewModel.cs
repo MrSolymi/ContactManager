@@ -3,7 +3,6 @@ using System.ComponentModel;
 using System.IO;
 using System.Windows;
 using System.Windows.Data;
-using Azure.Core;
 using McDContactManager.Common;
 using McDContactManager.data;
 using McDContactManager.Model;
@@ -142,6 +141,9 @@ public class MainWindowViewModel : INotifyPropertyChanged
     
     public MainWindowViewModel()
     {
+        if (DesignerProperties.GetIsInDesignMode(new DependencyObject()))
+            return;
+        
         RefreshCommand = new RelayCommand(async () => await FetchEmailsAsync(), CanFetchEmails);
         LoginCommand = new RelayCommand(async () => await ExecuteLoginCommand(), CanExecuteLoginCommand);
 
@@ -184,8 +186,8 @@ public class MainWindowViewModel : INotifyPropertyChanged
             live.LiveFilteringProperties.Add(nameof(Contact.Hired));
         }
         
-        var config = ConfigManager.Load() ?? new AppConfig();
-        if (!string.IsNullOrEmpty(config.LastUsedSenderAddress))
+        var config = ConfigManager.Load();
+        if (config != null && !string.IsNullOrEmpty(config.LastUsedSenderAddress))
         {
             SenderEmail = config.LastUsedSenderAddress;
         }
@@ -208,8 +210,8 @@ public class MainWindowViewModel : INotifyPropertyChanged
             !c.Email.Contains(EmailFilter, StringComparison.OrdinalIgnoreCase))
             return false;
 
-        if (DateFrom.HasValue && c.DateCreated < DateFrom.Value) return false;
-        if (DateTo.HasValue && c.DateCreated > DateTo.Value) return false;
+        if (DateFrom.HasValue && c.AssignedDate < DateFrom.Value) return false;
+        if (DateTo.HasValue && c.AssignedDate > DateTo.Value) return false;
 
         if (OnlyUnreviewed && !(c.Published == null || c.Hired == null)) return false;
 
@@ -242,124 +244,113 @@ public class MainWindowViewModel : INotifyPropertyChanged
 
     private bool CanFetchEmails()
     {
-        return !string.IsNullOrEmpty(_senderEmail) && Application.Current.Properties["Credential"] != null;
+        return AuthServiceGoogle.Gmail != null; // Gmail be van jelentkezve
     }
-    
+
     private async Task FetchEmailsAsync()
     {
-        if (!Application.Current.Properties.Contains("Credential"))
+        if (AuthServiceGoogle.Gmail == null)
         {
-            MessageBox.Show("Nincs bejelentkezve.");
+            MessageBox.Show("Előbb jelentkezz be Gmailbe.");
             return;
         }
-
-        var credential = Application.Current.Properties["Credential"] as TokenCredential;
-        if (credential == null)
+        
+        var config = ConfigManager.Load();
+        if (config != null)
         {
-            MessageBox.Show("Credential null.");
+            config.LastUsedSenderAddress = _senderEmail;
+            ConfigManager.Save(config);
+        }
+
+        var gmail = new GmailServiceWrapper(AuthServiceGoogle.Gmail);
+        var items = await gmail.SearchEmailsFromAsync(SenderEmail, maxMessages: 200);
+
+        Console.WriteLine($"[GMAIL] Found {items.Count} messages from '{SenderEmail}'.");
+        foreach (var i in items)
+            Console.WriteLine($"  {i.Date:yyyy-MM-dd HH:mm} | {i.Subject} | att={i.AttachmentCount}");
+        
+        var idsWithAtt = items.Where(m => m.HasAttachments).Select(m => m.Id).ToList();
+        if (idsWithAtt.Count == 0)
+        {
+            MessageBox.Show("Nincs csatolmányos levél.");
             return;
         }
-
-        var config = ConfigManager.Load() ?? new AppConfig();
-        config.LastUsedSenderAddress = _senderEmail;
-        ConfigManager.Save(config);
         
-        var graph = new GraphService(credential);
+        var downloadDir = Path.Combine(AppInitializer.AppFolderPath, "Downloads");
+        var saved = await gmail.DownloadAttachmentsAsync(idsWithAtt, downloadDir, onlyOutlookItems: true);
+
+        //MessageBox.Show($"Letöltve {saved.Count} csatolmány ide:\n{downloadDir}");
         
-        var emailBodies = await graph.GetEmailTextsFromSenderAsync(_senderEmail, top: 200);
+        // .eml feldolgozás
+        var parsedContacts = EmlProcessorService.ProcessEmlFolder(downloadDir);
+        var newCount = EmlProcessorService.SaveContactsToDatabase(parsedContacts);
         
-        var parsedContacts = new List<Contact>();
-
-        foreach (var html in emailBodies)
-        {
-            var (name, phone, email) = EmailParser.Parse(html);
-
-            if (!string.IsNullOrWhiteSpace(name) &&
-                !string.IsNullOrWhiteSpace(phone) &&
-                !string.IsNullOrWhiteSpace(email))
-            {
-                var probNewContact = new Contact(name, phone, email);
-                
-                if (!parsedContacts.Contains(probNewContact))
-                {
-                    parsedContacts.Add(new Contact(name, phone, email));
-                }
-            }
-        }
-
-        SaveContactsToDatabase(parsedContacts, out var newContactsCount);
-
-        MessageBox.Show($"Sikeresen beolvasva {newContactsCount} új kontakt.", "Siker", MessageBoxButton.OK, MessageBoxImage.Information);
+        LoadContactsFromDatabase(silent: true);
+        ApplyFilters();
+        
+        MessageBox.Show($"Feldolgozva {parsedContacts.Count} fájl, ebből {newCount} új kontakt mentve az adatbázisba.");
     }
     
-    private void SaveContactsToDatabase(List<Contact> contacts, out int newContactsCount)
-    {
-        newContactsCount = 0;
-        
-        using var db = new DatabaseContext("contacts.db");
-        using var dummyDb = new DatabaseContext("dummyContacts.db");
-        db.Database.EnsureCreated();
-
-        foreach (var contact in contacts)
-        {
-            var alreadyExists = db.Contacts.Any(c => c.Phone == contact.Phone) || db.Contacts.Any(c => c.Email == contact.Email);
-
-            if (alreadyExists)
-            {
-                continue;
-            }
-            
-            newContactsCount++;
-            
-            db.Contacts.Add(contact);
-            AllContacts.Add(contact);
-            FilteredContacts.Add(contact);
-        }
-        
-        db.SaveChanges();
-    }
+    // private void SaveContactsToDatabase(List<Contact> contacts, out int newContactsCount)
+    // {
+    //     newContactsCount = 0;
+    //     
+    //     using var db = new DatabaseContext("contacts.db");
+    //     using var dummyDb = new DatabaseContext("dummyContacts.db");
+    //     db.Database.EnsureCreated();
+    //
+    //     foreach (var contact in contacts)
+    //     {
+    //         var alreadyExists = db.Contacts.Any(c => c.Phone == contact.Phone) || db.Contacts.Any(c => c.Email == contact.Email);
+    //
+    //         if (alreadyExists)
+    //         {
+    //             continue;
+    //         }
+    //         
+    //         newContactsCount++;
+    //         
+    //         db.Contacts.Add(contact);
+    //         AllContacts.Add(contact);
+    //         FilteredContacts.Add(contact);
+    //     }
+    //     
+    //     db.SaveChanges();
+    // }
 
     private bool CanExecuteLoginCommand()
     {
-        return !Application.Current.Properties.Contains("Credential");
+        return AuthServiceGoogle.Gmail == null;
     }
     
     private async Task ExecuteLoginCommand()
     {
         try
         {
-            var ok = await AuthService.EnsureSignedInAsync();
-            
+            var ok = await AuthServiceGoogle.EnsureSignedInAsync();
             if (!ok)
             {
-                MessageBox.Show("Bejelentkezés sikertelen.", "Hiba",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Bejelentkezés sikertelen.", "Hiba", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
-
-            Application.Current.Properties["Credential"] = AuthService.Credential;
             
-            LoginCommand.RaiseCanExecuteChanged();
-            RefreshCommand.RaiseCanExecuteChanged();
-            
+            // profil lekérés (email cím)
             try
             {
-                var graph = new GraphService(AuthService.Credential);
-                var me = await graph.GetMeAsync();
-                var name = me.DisplayName
-                           ?? me.Mail
-                           ?? me.UserPrincipalName
-                           ?? "ismeretlen felhasználó";
-
-                LoggedInUser = name;
-                IsLoggedIn = true;
+                var profile = await AuthServiceGoogle.Gmail.Users.GetProfile("me").ExecuteAsync();
+                LoggedInUser = profile?.EmailAddress ?? "bejelentkezve";
             }
             catch
             {
-                // ha valamiért /me nem sikerül, legalább jelezzük, hogy logged-in
-                IsLoggedIn = true;
                 LoggedInUser = "bejelentkezve";
             }
+
+            // Gmail „me” – itt nincs külön „/me” mint Graph-nál, de jelöljük logged-in állapotot:
+            IsLoggedIn = true;
+            // LoggedInUser = "Gmail fiók bejelentkezve";
+
+            LoginCommand.RaiseCanExecuteChanged();
+            RefreshCommand.RaiseCanExecuteChanged();
         }
         catch (Exception ex)
         {

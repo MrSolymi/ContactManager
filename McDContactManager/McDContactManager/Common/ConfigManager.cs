@@ -21,7 +21,8 @@ public static class ConfigManager
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Config betöltési hiba: {ex.Message}");
+            //MessageBox.Show($"Config betöltési hiba: {ex.Message}");
+            Console.WriteLine($"Config betöltési hiba: {ex.Message}");
             return null;
         }
     }
@@ -49,6 +50,7 @@ public static class ConfigManager
         var defaultConfig = new AppConfig
         {
             ClientId = "",
+            ClientSecret = "",
             LastUsedSenderAddress = ""
         };
         Save(defaultConfig);

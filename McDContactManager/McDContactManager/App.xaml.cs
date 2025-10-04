@@ -20,13 +20,8 @@ public partial class App : Application
         ConfigManager.EnsureExists();
         var config = ConfigManager.Load();
         
-        // AuthService.Initialize();
-        //
-        // Current.ShutdownMode = ShutdownMode.OnExplicitShutdown;
-        //
-        // var config = ConfigManager.Load();
         
-        if (config == null || !KeyValidator.IsValid(config.ClientId))
+        if (config == null || !KeyValidator.IsValid(config.ClientId, config.ClientSecret))
         {
             Current.ShutdownMode = ShutdownMode.OnExplicitShutdown;
             
@@ -40,7 +35,7 @@ public partial class App : Application
             }
             
             config = ConfigManager.Load();
-            if (config == null || !KeyValidator.IsValid(config.ClientId))
+            if (config == null || !KeyValidator.IsValid(config.ClientId, config.ClientSecret))
             {
                 MessageBox.Show("Az aktiválás nem sikerült.");
                 Shutdown();
@@ -50,12 +45,14 @@ public partial class App : Application
             Current.ShutdownMode = ShutdownMode.OnMainWindowClose;
         }
         
-        AuthService.Initialize();
-        
         var main = new MainWindow();
         Current.MainWindow = main;
         main.Show();
-        
-        //Current.ShutdownMode = ShutdownMode.OnMainWindowClose;
+    }
+    
+    protected override void OnExit(ExitEventArgs e)
+    {
+        base.OnExit(e);
+        AuthServiceGoogle.SignOut();
     }
 }

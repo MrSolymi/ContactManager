@@ -9,14 +9,27 @@ public class ActivationWindowViewModel : INotifyPropertyChanged
 {
     public RelayCommand ActivationCommand { get; }
     
-    private string _activationKey = "";
-    public string ActivationKey
+    private string _activationId = "";
+    public string ActivationId
     {
-        get => _activationKey;
+        get => _activationId;
         set
         {
-            _activationKey = value;
-            OnPropertyChanged(nameof(ActivationKey));
+            _activationId = value;
+            OnPropertyChanged(nameof(ActivationId));
+            ActivationCommand.RaiseCanExecuteChanged();
+        }
+    }
+    
+    private string _activationSecret = "";
+
+    public string ActivationSecret
+    {
+        get => _activationSecret;
+        set
+        {
+            _activationSecret = value;
+            OnPropertyChanged(nameof(ActivationSecret));
             ActivationCommand.RaiseCanExecuteChanged();
         }
     }
@@ -32,12 +45,14 @@ public class ActivationWindowViewModel : INotifyPropertyChanged
 
     private void ExecuteActivationCommand()
     {
-        var input = _activationKey.Trim();
+        var inputId = _activationId.Trim();
+        var inputSecret = _activationSecret.Trim();
         
-        if (KeyValidator.IsValid(input))
+        if (KeyValidator.IsValid(inputId, inputSecret))
         {
             var config = ConfigManager.Load() ?? new AppConfig();
-            config.ClientId = input;
+            config.ClientId = inputId;
+            config.ClientSecret = inputSecret;
             
             ConfigManager.Save(config);
             
@@ -49,8 +64,11 @@ public class ActivationWindowViewModel : INotifyPropertyChanged
         }
     }
     
-    private bool CanExecuteActivationCommand() => !string.IsNullOrWhiteSpace(ActivationKey);
-    
+    private bool CanExecuteActivationCommand()
+    {
+        return !string.IsNullOrWhiteSpace(ActivationId) && !string.IsNullOrWhiteSpace(ActivationSecret);
+    }
+
     private void OnPropertyChanged(string propertyName)
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));

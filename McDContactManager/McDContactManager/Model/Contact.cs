@@ -17,6 +17,7 @@ public class Contact : INotifyPropertyChanged
     public string Email { get; }
 
     public DateTime DateCreated { get; private set; }
+    public DateTime AssignedDate { get; private set; }
 
     private bool? _published;
     public bool? Published
@@ -49,12 +50,13 @@ public class Contact : INotifyPropertyChanged
 
     [NotMapped]
     public string HiredDisplay => Hired is null ? "" : (Hired.Value ? "Igen" : "Nem");
-    public Contact(string name, string phone, string email)
+    public Contact(string name, string phone, string email, DateTime assignedDate)
     {
         Name = name;
         Phone = phone;
         Email = email;
         DateCreated = DateTime.Today;
+        AssignedDate = assignedDate;
         Published = null;
         Hired = null;
     }
