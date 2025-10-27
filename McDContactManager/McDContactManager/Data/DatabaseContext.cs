@@ -19,14 +19,15 @@ public class DatabaseContext(string dbPath) : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Contact>().HasKey(c => c.Id);
-        
         modelBuilder.Entity<Contact>().Property(c => c.Id).ValueGeneratedOnAdd();
         
         modelBuilder.Entity<Contact>().Property(c => c.Name).IsRequired();
         modelBuilder.Entity<Contact>().Property(c => c.Email).IsRequired();
         modelBuilder.Entity<Contact>().Property(c => c.Phone).IsRequired();
-        
-        modelBuilder.Entity<Contact>().HasIndex(c => c.Phone).IsUnique();
-        modelBuilder.Entity<Contact>().HasIndex(c => c.Email).IsUnique();
+        modelBuilder.Entity<Contact>().Property(c => c.AssignedDate).IsRequired();
+
+        modelBuilder.Entity<Contact>()
+            .HasIndex(c => new { c.Name, c.Email, c.Phone })
+            .IsUnique();
     }
 }

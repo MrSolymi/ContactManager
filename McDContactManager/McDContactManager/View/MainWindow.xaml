@@ -8,7 +8,7 @@
                       xmlns:behaviors="clr-namespace:McDContactManager.Model"
                       xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
                       mc:Ignorable="d"
-                      Title="McD Kontakt Kezelő" Height="900" Width="1600">
+                      Title="Kontakt Kezelő" Height="900" Width="1600">
     
     <Window.DataContext>
         <vm:MainWindowViewModel />
@@ -26,7 +26,7 @@
 
         <!-- Gombok -->
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,0,0,10">
-            <Button Command="{Binding LoginCommand}" Content="Beelentkezés" Margin="0,0,10,0" Width="100"/>
+            <Button Command="{Binding LoginCommand}" Content="Bejelentkezés" Margin="0,0,10,0" Width="100"/>
             <Button Command="{Binding RefreshCommand}" Content="Frissítés" Margin="0,0,10,0" Width="100"/>
             <Label Content="Feladó:" VerticalAlignment="Center" Margin="80,0,0,0"/>
             <TextBox Text="{Binding SenderEmail, UpdateSourceTrigger=PropertyChanged}" Width="250" Margin="5,0,15,0"/>
@@ -83,6 +83,7 @@
 
         <!-- DataGrid -->
         <DataGrid Grid.Row="5" 
+                  ScrollViewer.VerticalScrollBarVisibility="Visible"
                   ItemsSource="{Binding FilteredContacts}" 
                   behaviors:SelectedItemsBehavior.BindableSelectedItems="{Binding SelectedContacts}" 
                   AutoGenerateColumns="False"

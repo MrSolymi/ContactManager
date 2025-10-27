@@ -10,11 +10,11 @@ public class Contact : INotifyPropertyChanged
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int Id { get; set; }
     
-    public string Name { get; private set; }
+    public string Name { get; set; }
 
-    public string Phone { get; }
+    public string Phone { get; set; }
 
-    public string Email { get; }
+    public string Email { get; set; }
 
     public DateTime DateCreated { get; private set; }
     public DateTime AssignedDate { get; private set; }

@@ -289,6 +289,8 @@ public class MainWindowViewModel : INotifyPropertyChanged
         ApplyFilters();
         
         MessageBox.Show($"Feldolgozva {parsedContacts.Count} fájl, ebből {newCount} új kontakt mentve az adatbázisba.");
+        
+        ClearDownloadDirectory(downloadDir);
     }
     
     // private void SaveContactsToDatabase(List<Contact> contacts, out int newContactsCount)
@@ -529,5 +531,24 @@ public class MainWindowViewModel : INotifyPropertyChanged
 
         foreach (var contact in FilteredContacts.Where(f => selected.Any(s => s.Id == f.Id)))
             contact.Hired = false;
+    }
+
+    public static void ClearDownloadDirectory(string directoryPath)
+    {
+        if (!Directory.Exists(directoryPath))
+            return;
+
+        // Fájlok törlése
+        foreach (var file in Directory.GetFiles(directoryPath))
+        {
+            try
+            {
+                File.Delete(file);
+            }
+            catch (IOException ex)
+            {
+                Console.WriteLine($"Nem sikerült törölni a fájlt: {file} - {ex.Message}");
+            }
+        }
     }
 }

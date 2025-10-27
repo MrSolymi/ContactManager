@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using McDContactManager.data;
 using McDContactManager.Model;
+using Microsoft.EntityFrameworkCore;
 using MimeKit;
 
 namespace McDContactManager.Service;
@@ -70,27 +71,77 @@ public static class EmlProcessorService
         if (contacts.Count == 0)
             return 0;
 
-        // --- deduplikálás memóriában ---
-        contacts = contacts
-            .GroupBy(c => new { c.Phone, c.Email })
-            .Select(g => g.First())
+        // --- normalizáló függvények ---
+        static string NormName(string? s)  => (s ?? "").Trim();
+        static string NormEmail(string? s) => (s ?? "").Trim().ToLowerInvariant();
+        static string NormPhone(string? s) => new string((s ?? "").Where(char.IsDigit).ToArray()); // csak számjegyek
+        
+        // --- memóriabeli deduplikálás: Név+Telefon+Email ---
+        var deduped = contacts
+            .Select(c => new
+            {
+                Original = c,
+                Key = new
+                {
+                    Name = NormName(c.Name),
+                    Phone = NormPhone(c.Phone),
+                    Email = NormEmail(c.Email)
+                }
+            })
+            .GroupBy(x => x.Key)         // teljes hármas kulcs
+            .Select(g =>
+            {
+                // ha több azonos kulcsú érkezik, vedd az elsőt (vagy itt dönthetsz, melyiket preferálod)
+                var first = g.First().Original;
+                // fontos: a normalizált értékeket írd vissza, hogy konszisztensek legyenek az adatbázisban
+                first.Name  = NormName(first.Name);
+                first.Phone = NormPhone(first.Phone);
+                first.Email = NormEmail(first.Email);
+                return first;
+            })
             .ToList();
+
 
         using var db = new DatabaseContext("contacts.db");
         db.Database.EnsureCreated();
 
-        int newCount = 0;
+        // --- létező rekordok kulcsainak beolvasása egyszerre ---
+        var existingKeys = db.Contacts
+            .Select(x => new
+            {
+                Name  = x.Name,
+                Phone = x.Phone,
+                Email = x.Email
+            })
+            .AsEnumerable() // SQLite miatt oké; alternatíva: ToList()
+            .Select(k => $"{k.Name}||{k.Phone}||{k.Email}")
+            .ToHashSet(StringComparer.Ordinal);
 
-        foreach (var c in contacts)
+        // --- új rekordok kiválogatása: akkor új, ha Név+Telefon+Email nincs az adatbázisban ---
+        var toInsert = deduped
+            .Where(c =>
+            {
+                var key = $"{c.Name}||{c.Phone}||{c.Email}";
+                return !existingKeys.Contains(key);
+            })
+            .ToList();
+
+        if (toInsert.Count == 0)
+            return 0;
+
+        db.Contacts.AddRange(toInsert);
+        try
         {
-            var exists = db.Contacts.Any(x => x.Phone == c.Phone || x.Email == c.Email);
-            if (exists) continue;
-
-            db.Contacts.Add(c);
-            newCount++;
+            db.SaveChanges();
+            return toInsert.Count;
         }
-
-        db.SaveChanges();
-        return newCount;
+        catch (DbUpdateException)
+        {
+            // Ha párhuzamos beszúrás/versenyhelyzet miatt belefut a unique indexbe,
+            // itt fel lehet fogni és visszaadni a biztosan beszúrtak számát.
+            // Egy egyszerű “best-effort” megoldás:
+            // újratöltöd az existingKeys-et és kiszámolod, mennyi került be ténylegesen.
+            return db.ChangeTracker.Entries<Contact>().Count(e => e.State == EntityState.Unchanged);
+        }
     }
 }
