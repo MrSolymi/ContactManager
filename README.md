@@ -1,70 +1,115 @@
-# McDContactManager – Email alapú kapcsolatkezelő alkalmazás
+# ContactManager (Kontakt Kezelő) – Email-alapú kapcsolatkezelő alkalmazás
 
 ## Áttekintés
-A **McDContactManager** egy asztali alkalmazás, amely Microsoft Graph API-t használva, OAuth2 hitelesítésen keresztül képes emaileket letölteni és azokból kontaktadatokat kinyerni.  
-A rendszer kizárólag az adott feladói címről érkező, releváns adatokat tartalmazó leveleket dolgozza fel, és a kontaktokat egy helyi adatbázisban tárolja, duplikációk nélkül.  
-
-Az alkalmazás célja, hogy automatizáltan kezelje a beérkező jelentkezéseket, majd kényelmesen szűrhető és módosítható formában jelenítse meg azokat.
+A **ContactManager** egy WPF asztali alkalmazás, amely Gmail-hozzáférésen keresztül (OAuth2) képes bejövő emailek **.eml csatolmányait** feldolgozni, és azokból **kontaktadatokat** (név, telefonszám, email, jelentkezés ideje) kinyerni.  
+A kinyert rekordok **SQLite** adatbázisba kerülnek, **duplikációk nélkül**, majd egy szűrhető-rendezhető táblázatban jelennek meg, ahol az állapotuk (Megjelent/Felvett) tömegesen is módosítható.
 
 ---
 
-## Használat előtti beállítás
+## Aktiválás (első indítás)
+Működés előtt egyszeri aktiválás szükséges az adott eszközön:
+1. Add meg a **Client ID** és **Client Secret** értékeket (Google Cloud Console-ban regisztrált app adatai).
+2. Sikeres aktiválás után az alkalmazás **megőrzi** ezt a beállítást, **azon az eszközön többet nem kell ismételni**.
 
-1. **Kliens ID megadása**  
-   Indításkor az alkalmazás kéri a Microsoft Azure-ban regisztrált alkalmazás **Client ID**-ját.  
-   Érvényes Client ID nélkül az alkalmazás nem használható.
+> **Megjegyzés:** A bejelentkezési munkamenet (OAuth) csak az alkalmazás futása alatt él; a program **nem tárol** helyben hozzáférési tokent/jelszót.
 
-2. **Hitelesítés**  
-   A bejelentkezés Microsoft fiókkal történik, OAuth2 protokoll segítségével.  
-   Sikeres hitelesítés után az alkalmazás automatikusan hozzáfér az engedélyezett email adatokhoz.
+---
+
+## Bejelentkezés és jogosultságok
+- Jelentkezz be a **Google (Gmail) fiókoddal** az alkalmazáson belül.
+- A bejelentkezés után **engedélyezned kell**, hogy az app olvashassa a postafiókodat és csatolmányait.  
+- A sikeres engedélyezés után a ContactManager eléri az emaileket és a **.eml** csatolmányokat feldolgozás céljából.
+
+---
+
+## Működés – feldolgozási folyamat
+1. **Feladó megadása:** az alkalmazásban meg kell adni a feldolgozandó levelek **feladójának email címét**.
+2. **Keresés és letöltés:** az alkalmazás a megadott feladó alapján **megkeresi a leveleket**, és ha talál bennük **.eml csatolmányt**, azt **letölti** egy ideiglenes helyre.
+3. **Kinyerés:** minden .eml fájlból **1 kontakt** adata kerül kinyerésre:  
+   - **Név**, **Telefonszám**, **Email cím**, **Jelentkezés ideje**.
+4. **Mentés:** az új kontakt **duplikáció-ellenőrzés** után bekerül az **SQLite** adatbázisba.
+5. **Tisztítás:** a sikeresen feldolgozott **.eml fájlokat törli** a rendszer (nem foglalnak helyet feleslegesen).
+6. **UI frissítés:** a táblázat automatikusan **teljesen frissül**.
 
 ---
 
 ## Fő funkciók
 
-### 1. Email letöltés és feldolgozás
-- A felhasználó beírhat egy konkrét feladói email címet.
-- Az alkalmazás csak az ettől a címtől érkezett leveleket vizsgálja.
-- Amennyiben a levél tartalmazza a szükséges adatokat (név, telefonszám, email), az bekerül az adatbázisba.
-- **Duplikációkezelés:** minden kontakt csak egyszer szerepelhet az adatbázisban.
+### Adatbázis frissítése
+- **Frissítés** gomb: beolvasás a Gmailből, .eml letöltés → kinyerés → mentés → táblázat frissítése.
+- A gombok **állapotfüggőek**: csak akkor aktívak, amikor az adott művelet elvégezhető.
 
-### 2. Adatvizualizáció
-A kontaktok egy **DataGrid**-ben jelennek meg, ahol:
-- **Szűrés** lehetséges:
-  - név szerint
-  - email cím szerint
-  - telefonszám szerint
-  - bekerülés dátuma alapján (tól–ig intervallum)
-  - **Új funkció:** csak a felülvizsgálatlan rekordok szűrése (olyan kontaktok, ahol a *Megjelent* vagy *Felvett* mező még nem lett beállítva)
-- **Rendezés** bármely oszlop szerint
-- **Többszörös kijelölés** támogatott (`Ctrl + kattintás` vagy `Shift + kattintás`).
+### Szűrés és rendezés
+- **Szűrés**: név, telefonszám, email szerint.
+- **Dátumszűrő**: jelentkezés ideje **tól–ig** intervallummal.
+- **Hiányos kontaktok** megjelenítése: kapcsoló, amely csak azokat mutatja, ahol a **Megjelent** vagy **Felvett** mező még **nincs beállítva**.
+- **Rendezés**: bármely oszlop szerint.
 
-### 3. Adatmódosítás
-Minden kontakt esetében beállítható:
-- **Megjelent** – részt vett-e a tájékoztatón
-- **Felvett** – felvételt nyert-e
+### Állapotkezelés (Megjelent / Felvett)
+- Kezdetben a státuszok **üres** (null) értékűek.
+- **Tömeges módosítás** több kijelölt rekordon:
+  - Egységes állapot esetén váltható:  
+    - `null` → `true` / `false`  
+    - `true` → `false`  
+    - `false` → `true`
+  - **Vegyes** (`true` és `false` együtt) esetén a művelet **tiltott**.
+- Ha a **„Hiányos kontaktok”** szűrő aktív, a módosított rekord **azonnal eltűnik** a listából (mert már nem hiányos).
 
-#### Új módosítási logika
-- A státusz mezők (`Megjelent` / `Felvett`) alapértelmezésben üresek (null), ha még nem történt módosítás.
-- Tömegműveletek esetén a rendszer csak akkor engedi a módosítást, ha a kijelölt elemek állapota egységes:
-  - `null` → állítható `true`-ra vagy `false`-ra.
-  - `true` → állítható `false`-ra.
-  - `false` → állítható `true`-ra.
-  - Vegyes állapot (pl. van `true` és `false` is egyszerre) → a művelet letiltva.
-- A **"Csak felülvizsgálatlanok"** szűrő bekapcsolása esetén, ha egy elem státusza módosul, a rendszer automatikusan frissíti a nézetet és eltávolítja a listából a már beállított rekordot.
+### Tömeges email-cím másolás
+- **„E-mailek másolása vágólapra”** gomb: a kijelölt kontaktok email címeit olyan formában másolja, hogy **Outlookba** beillesztve (**Ctrl+V**) **egy lépésben** címezhető legyen mindenkinek.
 
 ---
 
-## Technikai jellemzők
-- **Microsoft Graph API** integráció
-- **OAuth2** alapú hitelesítés
-- **SQLite** adatbázis tárolás
-- **Valós idejű UI frissítés** – minden módosítás azonnal látszik
-- **Reszponzív felület**
-- **Live Filtering támogatás** – a szűrők automatikusan frissülnek státuszváltozás esetén
+## Adatmodell (röviden)
+- **Név** | **Telefonszám** | **Email** | **Jelentkezés ideje**  
+- **Megjelent** (null/true/false) | **Felvett** (null/true/false)  
+- **Dátumok**: Jelentkezés ideje; Adatbázisba kerülés ideje
+
+---
+
+## Biztonság és adatvédelem
+- A bejelentkezési munkamenet **csak futásidőben él**, az alkalmazás **nem tárol** helyben hozzáférési adatokat.
+- A feldolgozott **.eml csatolmányok törlésre kerülnek** a kinyerés után.
+- Az adatbázis **lokálisan**, **SQLite**-ban tárolódik.
+
+---
+
+## Használati lépések (gyorsstart)
+1. **Első indítás:** add meg a **Client ID** és **Client Secret** értékeket → **Aktiválás**.
+2. **Bejelentkezés** Gmail fiókba → add meg a szükséges **engedélyeket**.
+3. **Feladó email címének megadása** – az alkalmazás csak az ettől a címről érkező leveleket fogja vizsgálni.
+4. **Frissítés** gomb → új kontaktok beolvasása a .eml csatolmányokból.
+5. **Szűrés** és **rendezés** beállítása a rács fölötti sávban.
+6. **Tömeges módosítás**: jelöld ki a sorokat → állapotgombok (Megjelent/Felvett).
+7. **Email-címek másolása**: kijelölt sorok → „E-mailek másolása vágólapra” → beillesztés Outlookba.
+
+---
+
+## Követelmények
+- Windows 10/11
+- Internetkapcsolat (Gmail eléréséhez)
+- Google Cloud Console-ban regisztrált alkalmazás (**Client ID** + **Client Secret**)
+
+---
+
+## Hibaelhárítás (gyakori esetek)
+- **Nem aktív a Frissítés gomb:** előbb jelentkezz be Gmaillel, majd add meg a **feladó email címét**.
+- **Nem kerül be kontakt:** ellenőrizd, hogy a .eml csatolmány **érvényes** adatokat tartalmaz-e (név, telefonszám, email).
+- **Duplikáció gyanú:** a rendszer deduplikál; ha egy rekord nem látszik újként, valószínűleg már szerepel az adatbázisban.
+- **Üres lista szűréskor:** kapcsold ki ideiglenesen a „Hiányos kontaktok” szűrőt, vagy ellenőrizd a dátumintervallumot.
+
+---
+
+## UI áttekintés (fő elemek)
+- **Bejelentkezés / Frissítés** gombok
+- **Feladó** – ez alapján szűr a rendszer, csak az ettől a címtől érkezett emailekben keres csatolmányokat
+- **Állapotjelző** (bejelentkezve/nem)
+- **Email-címek másolása** gomb
+- **Állapotgombok**: Megjelent, Nem jelent meg, Felvett, Visszautasítva
+- **Szűrősáv**: Név, Telefonszám, Email, Dátum -tól/-ig, „Hiányos kontaktok”
+- **DataGrid**: rendezhető oszlopok, többszörös kijelölés
 
 ---
 
 ## Összegzés
-A McDContactManager ideális megoldás azoknak, akik automatizáltan szeretnék kezelni a beérkező jelentkezéseket, kiszűrni a releváns adatokat, és ezeket egy könnyen kezelhető, szűrhető és módosítható felületen szeretnék látni.  
-Az új szűrési és tömegműveleti logika segítségével a feldolgozás még gyorsabbá és hibamentesebbé válik.
+A **ContactManager** gyors és megbízható módon automatizálja a Gmailbe érkező, **.eml** csatolmányokban található jelentkezések feldolgozását. A deduplikált adatbázis, az állapotkezelés, a rugalmas szűrés/rendezés és a **tömeges email-cím másolás** mind azt szolgálja, hogy a kiválasztás és kommunikáció **gyorsabb** és **hibamentesebb** legyen.
