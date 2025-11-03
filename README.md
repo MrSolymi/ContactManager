@@ -16,7 +16,7 @@ Működés előtt egyszeri aktiválás szükséges az adott eszközön:
 ---
 
 ## Bejelentkezés és jogosultságok
-- Jelentkezz be a **Google (Gmail) fiókoddal** az alkalmazáson belül.
+- Jelentkezz be a **Google (Gmail)** fiókoddal az alkalmazáson belül.
 - A bejelentkezés után **engedélyezned kell**, hogy az app olvashassa a postafiókodat és csatolmányait.  
 - A sikeres engedélyezés után a ContactManager eléri az emaileket és a **.eml** csatolmányokat feldolgozás céljából.
 
@@ -38,6 +38,9 @@ Működés előtt egyszeri aktiválás szükséges az adott eszközön:
 ### Adatbázis frissítése
 - **Frissítés** gomb: beolvasás a Gmailből, .eml letöltés → kinyerés → mentés → táblázat frissítése.
 - A gombok **állapotfüggőek**: csak akkor aktívak, amikor az adott művelet elvégezhető.
+- A frissítés közben az UI **vizuálisan jelzi**, ha épp folyamatban van az adatok beolvasása és feldolgozása:
+  - A „Frissítés” gomb ilyenkor **letiltásra kerül**.
+  - A képernyőn egy **„Frissítés folyamatban...”** üzenet jelenik meg.
 
 ### Szűrés és rendezés
 - **Szűrés**: név, telefonszám, email szerint.
@@ -101,15 +104,47 @@ Működés előtt egyszeri aktiválás szükséges az adott eszközön:
 ---
 
 ## UI áttekintés (fő elemek)
-- **Bejelentkezés / Frissítés** gombok
-- **Feladó** – ez alapján szűr a rendszer, csak az ettől a címtől érkezett emailekben keres csatolmányokat
-- **Állapotjelző** (bejelentkezve/nem)
-- **Email-címek másolása** gomb
-- **Állapotgombok**: Megjelent, Nem jelent meg, Felvett, Visszautasítva
-- **Szűrősáv**: Név, Telefonszám, Email, Dátum -tól/-ig, „Hiányos kontaktok”
-- **DataGrid**: rendezhető oszlopok, többszörös kijelölés
+- **Bejelentkezés / Frissítés** gombok  
+- **Feladó** – ez alapján szűr a rendszer, csak az ettől a címtől érkezett emailekben keres csatolmányokat  
+- **Állapotjelző** (bejelentkezve/nem)  
+- **Email-címek másolása** gomb  
+- **Állapotgombok**: Megjelent, Nem jelent meg, Felvett, Visszautasítva  
+- **Szűrősáv**: Név, Telefonszám, Email, Dátum -tól/-ig, „Hiányos kontaktok”  
+- **DataGrid**: rendezhető oszlopok, többszörös kijelölés  
+
+---
+
+## Újdonságok és fejlesztések
+
+### Telefonszám-normalizálás (+36 → 06)
+Az **EmlProcessorService** `NormPhone` metódusa továbbfejlesztésre került:  
+- megtartja a számjegyeket és a `+` jelet,  
+- a **+36-tal kezdődő** telefonszámokat automatikusan **06-ra alakítja**,  
+- így az adatbázisban minden telefonszám **egységes formátumban** kerül tárolásra.  
+
+> Példa:  
+> `+36201234567` → `06201234567`
+
+Ez segíti a későbbi keresést, duplikációkezelést és szűrést.
+
+---
+
+### Frissítés állapotának megjelenítése az UI-n
+A felhasználói élmény javítása érdekében bevezetésre került az **„IsRefreshing”** állapot:
+- Amíg a Gmailből történik a levelek és csatolmányok feldolgozása,  
+  az alkalmazás kijelzi: *„Frissítés folyamatban...”*
+- A **Frissítés gomb** ilyenkor **automatikusan letiltódik**, így elkerülhetők a párhuzamos műveletek.
+- A megvalósításhoz két új **WPF konverter** került bevezetésre:
+  - `BoolToVisibilityConverter`  
+  - `InverseBoolConverter`
+- Ezek lehetővé teszik, hogy a UI dinamikusan reagáljon a `IsRefreshing` állapot változásaira.
 
 ---
 
 ## Összegzés
-A **ContactManager** gyors és megbízható módon automatizálja a Gmailbe érkező, **.eml** csatolmányokban található jelentkezések feldolgozását. A deduplikált adatbázis, az állapotkezelés, a rugalmas szűrés/rendezés és a **tömeges email-cím másolás** mind azt szolgálja, hogy a kiválasztás és kommunikáció **gyorsabb** és **hibamentesebb** legyen.
+A **ContactManager** gyors és megbízható módon automatizálja a Gmailbe érkező, **.eml** csatolmányokban található jelentkezések feldolgozását.  
+A deduplikált adatbázis, az állapotkezelés, a rugalmas szűrés/rendezés és a **tömeges email-cím másolás** mind azt szolgálja, hogy a kiválasztás és kommunikáció **gyorsabb**, **átláthatóbb** és **hibamentesebb** legyen.
+
+A legutóbbi frissítésekkel az alkalmazás:
+- **konzisztens telefonszám-formátumot** használ,  
+- és **valós idejű visszajelzést ad** a felhasználónak, ha éppen frissítést végez.
