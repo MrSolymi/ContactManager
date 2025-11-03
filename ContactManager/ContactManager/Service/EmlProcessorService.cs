@@ -74,7 +74,21 @@ public static class EmlProcessorService
         // --- normalizáló függvények ---
         static string NormName(string? s)  => (s ?? "").Trim();
         static string NormEmail(string? s) => (s ?? "").Trim().ToLowerInvariant();
-        static string NormPhone(string? s) => new string((s ?? "").Where(char.IsDigit).ToArray()); // csak számjegyek
+
+        static string NormPhone(string? s)
+        {
+            if (string.IsNullOrWhiteSpace(s))
+                return "";
+            
+            // csak számok és '+' előjel maradhatnak meg
+            var cleaned = new string(s.Where(c => char.IsDigit(c) || c == '+').ToArray());
+
+            // ha +36-tal kezdődik, alakítsuk át 06-ra
+            if (cleaned.StartsWith("+36"))
+                cleaned = "06" + cleaned[3..];
+
+            return cleaned;
+        }
         
         // --- memóriabeli deduplikálás: Név+Telefon+Email ---
         var deduped = contacts
