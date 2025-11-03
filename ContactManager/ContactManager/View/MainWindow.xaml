@@ -6,6 +6,7 @@
                       xmlns:local="clr-namespace:ContactManager"
                       xmlns:vm="clr-namespace:ContactManager.ViewModel"
                       xmlns:behaviors="clr-namespace:ContactManager.Model"
+                      xmlns:common="clr-namespace:ContactManager.Common"
                       xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
                       mc:Ignorable="d"
                       Title="Kontakt Kezelő" Height="900" Width="1600">
@@ -13,6 +14,11 @@
     <Window.DataContext>
         <vm:MainWindowViewModel />
     </Window.DataContext>
+    
+    <Window.Resources>
+        <common:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+        <common:InverseBoolConverter x:Key="InverseBoolConverter"/>
+    </Window.Resources>
     
     <Grid Margin="10">
         <Grid.RowDefinitions>
@@ -27,9 +33,14 @@
         <!-- Gombok -->
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,0,0,10">
             <Button Command="{Binding LoginCommand}" Content="Bejelentkezés" Margin="0,0,10,0" Width="100"/>
-            <Button Command="{Binding RefreshCommand}" Content="Frissítés" Margin="0,0,10,0" Width="100"/>
+            <Button Command="{Binding RefreshCommand}" Content="Frissítés" Margin="0,0,10,0" Width="100"
+                    IsEnabled="{Binding IsRefreshing, Converter={StaticResource InverseBoolConverter}}"/>
             <Label Content="Feladó:" VerticalAlignment="Center" Margin="80,0,0,0"/>
             <TextBox Text="{Binding SenderEmail, UpdateSourceTrigger=PropertyChanged}" Width="250" Margin="5,0,15,0"/>
+            <TextBlock Text="Frissítés folyamatban..."
+                       Foreground="OrangeRed"
+                       FontWeight="Bold"
+                       Visibility="{Binding IsRefreshing, Converter={StaticResource BoolToVisibilityConverter}}"/>
         </StackPanel>
         
         <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,0,0,10">

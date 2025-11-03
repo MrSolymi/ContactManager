@@ -52,6 +52,17 @@ public class MainWindowViewModel : INotifyPropertyChanged
     }
     public string StatusText => IsLoggedIn ? $"Bejelentkezve: {LoggedInUser}" : "Nincs bejelentkezve";
     
+    private bool _isRefreshing;
+    public bool IsRefreshing
+    {
+        get => _isRefreshing;
+        set
+        {
+            _isRefreshing = value;
+            OnPropertyChanged(nameof(IsRefreshing));
+        }
+    }
+    
     private string _nameFilter = "";
     public string NameFilter
     {
@@ -254,44 +265,49 @@ public class MainWindowViewModel : INotifyPropertyChanged
             MessageBox.Show("Előbb jelentkezz be Gmailbe.");
             return;
         }
-        
-        var config = ConfigManager.Load();
-        if (config != null)
+
+        IsRefreshing = true;
+
+        try
         {
-            config.LastUsedSenderAddress = _senderEmail;
-            ConfigManager.Save(config);
+            var config = ConfigManager.Load();
+            if (config != null)
+            {
+                config.LastUsedSenderAddress = _senderEmail;
+                ConfigManager.Save(config);
+            }
+
+            var gmail = new GmailServiceWrapper(AuthServiceGoogle.Gmail);
+            var items = await gmail.SearchEmailsFromAsync(SenderEmail, maxMessages: 200);
+            var idsWithAtt = items.Where(m => m.HasAttachments).Select(m => m.Id).ToList();
+            if (idsWithAtt.Count == 0)
+            {
+                MessageBox.Show("Nincs csatolmányos levél.");
+                return;
+            }
+
+            var downloadDir = Path.Combine(AppInitializer.AppFolderPath, "Downloads");
+            var saved = await gmail.DownloadAttachmentsAsync(idsWithAtt, downloadDir, onlyOutlookItems: true);
+
+            var parsedContacts = EmlProcessorService.ProcessEmlFolder(downloadDir);
+            var newCount = EmlProcessorService.SaveContactsToDatabase(parsedContacts);
+
+            LoadContactsFromDatabase(silent: true);
+            ApplyFilters();
+
+            MessageBox.Show($"Feldolgozva {parsedContacts.Count} fájl, ebből {newCount} új kontakt mentve az adatbázisba.");
+            ClearDownloadDirectory(downloadDir);
         }
-
-        var gmail = new GmailServiceWrapper(AuthServiceGoogle.Gmail);
-        var items = await gmail.SearchEmailsFromAsync(SenderEmail, maxMessages: 200);
-
-        Console.WriteLine($"[GMAIL] Found {items.Count} messages from '{SenderEmail}'.");
-        foreach (var i in items)
-            Console.WriteLine($"  {i.Date:yyyy-MM-dd HH:mm} | {i.Subject} | att={i.AttachmentCount}");
-        
-        var idsWithAtt = items.Where(m => m.HasAttachments).Select(m => m.Id).ToList();
-        if (idsWithAtt.Count == 0)
+        catch (Exception ex)
         {
-            MessageBox.Show("Nincs csatolmányos levél.");
-            return;
+            MessageBox.Show($"Hiba: {ex.Message}");
         }
-        
-        var downloadDir = Path.Combine(AppInitializer.AppFolderPath, "Downloads");
-        var saved = await gmail.DownloadAttachmentsAsync(idsWithAtt, downloadDir, onlyOutlookItems: true);
-
-        //MessageBox.Show($"Letöltve {saved.Count} csatolmány ide:\n{downloadDir}");
-        
-        // .eml feldolgozás
-        var parsedContacts = EmlProcessorService.ProcessEmlFolder(downloadDir);
-        var newCount = EmlProcessorService.SaveContactsToDatabase(parsedContacts);
-        
-        LoadContactsFromDatabase(silent: true);
-        ApplyFilters();
-        
-        MessageBox.Show($"Feldolgozva {parsedContacts.Count} fájl, ebből {newCount} új kontakt mentve az adatbázisba.");
-        
-        ClearDownloadDirectory(downloadDir);
+        finally
+        {
+            IsRefreshing = false;
+        }
     }
+
     
     // private void SaveContactsToDatabase(List<Contact> contacts, out int newContactsCount)
     // {
