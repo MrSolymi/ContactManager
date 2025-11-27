@@ -66,8 +66,10 @@ public static class EmlProcessorService
         return results;
     }
 
-    public static int SaveContactsToDatabase(List<Contact> contacts)
+    public static int SaveContactsToDatabase(List<Contact> contacts, out List<(string Name, DateTime ExistingAssignedDate, DateTime NewAssignedDate)> reapplications)
     {
+        reapplications = new List<(string, DateTime, DateTime)>();
+        
         if (contacts.Count == 0)
             return 0;
 
@@ -122,25 +124,46 @@ public static class EmlProcessorService
         DatabaseMigrator.EnsureIsForeignColumn(db);
         
         // --- létező rekordok kulcsainak beolvasása egyszerre ---
-        var existingKeys = db.Contacts
+        var existingDict = db.Contacts
             .Select(x => new
             {
-                Name  = x.Name,
-                Phone = x.Phone,
-                Email = x.Email
+                x.Name,
+                x.Phone,
+                x.Email,
+                x.AssignedDate
             })
-            .AsEnumerable() // SQLite miatt oké; alternatíva: ToList()
-            .Select(k => $"{k.Name}||{k.Phone}||{k.Email}")
-            .ToHashSet(StringComparer.Ordinal);
-
-        // --- új rekordok kiválogatása: akkor új, ha Név+Telefon+Email nincs az adatbázisban ---
-        var toInsert = deduped
-            .Where(c =>
+            .AsEnumerable()
+            .Select(x => new
             {
-                var key = $"{c.Name}||{c.Phone}||{c.Email}";
-                return !existingKeys.Contains(key);
+                Key = $"{x.Name}||{x.Phone}||{x.Email}",
+                x.AssignedDate
             })
-            .ToList();
+            .GroupBy(x => x.Key)
+            .ToDictionary(
+                g => g.Key,
+                g => g.First().AssignedDate  // egy kulcshoz egy dátum (unique index miatt úgyis 1 rekord)
+            );
+        
+        var toInsert = new List<Contact>();
+
+        foreach (var c in deduped)
+        {
+            var key = $"{c.Name}||{c.Phone}||{c.Email}";
+
+            if (existingDict.TryGetValue(key, out var existingAssigned))
+            {
+                // már benne van az adatbázisban -> nem szúrjuk be
+                // de ha más a dátum, akkor megjegyezzük
+                if (existingAssigned.Date != c.AssignedDate.Date)
+                {
+                    reapplications.Add((c.Name, existingAssigned, c.AssignedDate));
+                }
+                continue;
+            }
+
+            // teljesen új kontakt -> beszúrásra mehet
+            toInsert.Add(c);
+        }
 
         if (toInsert.Count == 0)
             return 0;

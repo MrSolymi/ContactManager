@@ -78,7 +78,7 @@ public class GmailServiceWrapper
         return results.OrderByDescending(r => r.Date ?? DateTime.MinValue).ToList();
     }
 
-    public async Task<List<string>> DownloadAttachmentsAsync(
+    public async Task DownloadAttachmentsAsync(
         IEnumerable<string> messageIds,
         string downloadDir,
         bool onlyOutlookItems = true, // csak .eml/.msg és message/rfc822
@@ -131,7 +131,6 @@ public class GmailServiceWrapper
         }
 
         Console.WriteLine($"[ATT] saved files: {saved.Count}");
-        return saved;
 
         // ---- helpers ----
         static byte[] Base64UrlDecode(string input)

@@ -307,15 +307,29 @@ public class MainWindowViewModel : INotifyPropertyChanged
             }
 
             var downloadDir = Path.Combine(AppInitializer.AppFolderPath, "Downloads");
-            var saved = await gmail.DownloadAttachmentsAsync(idsWithAtt, downloadDir, onlyOutlookItems: true);
+            
+            await gmail.DownloadAttachmentsAsync(idsWithAtt, downloadDir, onlyOutlookItems: true);
 
             var parsedContacts = EmlProcessorService.ProcessEmlFolder(downloadDir);
-            var newCount = EmlProcessorService.SaveContactsToDatabase(parsedContacts);
+
+            var newCount = EmlProcessorService.SaveContactsToDatabase(parsedContacts, out var reapplications);
 
             LoadContactsFromDatabase(silent: true);
             ApplyFilters();
 
-            MessageBox.Show($"Feldolgozva {parsedContacts.Count} fájl, ebből {newCount} új kontakt mentve az adatbázisba.");
+            var message = $"Feldolgozva {parsedContacts.Count} fájl, ebből {newCount} új kontakt mentve az adatbázisba.";
+
+            if (reapplications.Count > 0)
+            {
+                message += "\n\nAz alábbi kontaktok már szerepeltek az adatbázisban eltérő jelentkezési dátummal:\n\n";
+                foreach (var r in reapplications)
+                {
+                    message += $"- {r.Name}: korábbi dátum: {r.ExistingAssignedDate:yyyy. MM. dd}, új dátum: {r.NewAssignedDate:yyyy. MM. dd}\n";
+                }
+            }
+
+            MessageBox.Show(message, "Import eredménye");
+            
             ClearDownloadDirectory(downloadDir);
         }
         catch (Exception ex)
