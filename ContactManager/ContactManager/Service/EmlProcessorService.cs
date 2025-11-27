@@ -119,6 +119,8 @@ public static class EmlProcessorService
         using var db = new DatabaseContext("contacts.db");
         db.Database.EnsureCreated();
 
+        DatabaseMigrator.EnsureIsForeignColumn(db);
+        
         // --- létező rekordok kulcsainak beolvasása egyszerre ---
         var existingKeys = db.Contacts
             .Select(x => new
