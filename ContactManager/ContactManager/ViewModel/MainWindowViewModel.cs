@@ -19,8 +19,8 @@ public class MainWindowViewModel : INotifyPropertyChanged
     public RelayCommand MarkHiredCommand { get; }
     public RelayCommand MarkNotPublishedCommand { get; }
     public RelayCommand MarkNotHiredCommand { get; }
-    
     public RelayCommand ToggleForeignCommand { get; }
+    public RelayCommand DeleteContactsCommand { get; }
     
     public ObservableCollection<Contact> AllContacts { get; } = new();
     public ObservableCollection<Contact> FilteredContacts { get; } = new();
@@ -181,6 +181,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
         MarkNotHiredCommand = new RelayCommand(ExecuteMarkNotHired, CanExecuteMarkNotHired);
         
         ToggleForeignCommand = new RelayCommand(ExecuteToggleForeign, CanExecuteToggleForeign);
+        DeleteContactsCommand = new RelayCommand(ExecuteDeleteContacts, CanExecuteDeleteContacts);
             
         SelectedContacts.CollectionChanged += (_, e) =>
         {
@@ -264,6 +265,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
         
         CopySelectedEmailsCommand.RaiseCanExecuteChanged();
         ToggleForeignCommand.RaiseCanExecuteChanged();
+        DeleteContactsCommand.RaiseCanExecuteChanged();
     }
     
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -456,6 +458,11 @@ public class MainWindowViewModel : INotifyPropertyChanged
     {
         return SelectedContacts.Count == 1;
     }
+
+    private bool CanExecuteDeleteContacts()
+    {
+        return SelectedContacts.Count == 1;
+    }
     
     private bool CanExecuteMarkPublished()
     {
@@ -518,6 +525,44 @@ public class MainWindowViewModel : INotifyPropertyChanged
         foreach (var contact in FilteredContacts.Where(f => selected.Any(s => s.Id == f.Id)))
             contact.IsForeign = !contact.IsForeign;
         
+        ApplyFilters();
+    }
+    
+    private void ExecuteDeleteContacts()
+    {
+        var selected = SelectedContacts.ToList();
+        if (selected.Count == 0)
+            return;
+
+        var result = MessageBox.Show(
+            $"Biztosan törölni szeretnéd a kijelölt {selected.Count} kontaktot?",
+            "Kontaktok törlése",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Warning);
+
+        if (result != MessageBoxResult.Yes)
+            return;
+
+        using var db = new DatabaseContext("contacts.db");
+
+        foreach (var contact in selected)
+        {
+            var tracked = db.Contacts.FirstOrDefault(c => c.Id == contact.Id);
+            if (tracked != null)
+            {
+                db.Contacts.Remove(tracked);
+            }
+        }
+
+        db.SaveChanges();
+
+        foreach (var contact in selected)
+        {
+            AllContacts.Remove(contact);
+            FilteredContacts.Remove(contact);
+        }
+
+        SelectedContacts.Clear();
         ApplyFilters();
     }
     
