@@ -66,7 +66,9 @@
             <Button Command="{Binding MarkPublishedCommand}" Content="Megjelent" Margin="0,0,10,0" Width="140"/>
             <Button Command="{Binding MarkNotPublishedCommand}" Content="Nem jelent meg" Margin="0,0,10,0" Width="140"/>
             <Button Command="{Binding MarkHiredCommand}" Content="Felvett" Margin="0,0,10,0" Width="140"/>
-            <Button Command="{Binding MarkNotHiredCommand}" Content="Visszautasítva" Width="140"/>
+            <Button Command="{Binding MarkNotHiredCommand}" Content="Visszautasítva" Margin="0,0,10,0" Width="140"/>
+            
+            <Button Command="{Binding ToggleForeignCommand}" Content="Külföldi jelölés" Width="140"/>
         </StackPanel>
 
         <!-- Szűrők -->
@@ -90,6 +92,11 @@
                       IsChecked="{Binding OnlyUnreviewed}"
                       VerticalAlignment="Center"
                       Margin="5,0,0,0"/>
+            
+            <CheckBox Content="Csak külföldiek"
+                      IsChecked="{Binding OnlyForeign}"
+                      VerticalAlignment="Center"
+                      Margin="15,0,0,0"/>
         </StackPanel>
 
         <!-- DataGrid -->
@@ -115,6 +122,9 @@
                 
                 <DataGridTextColumn Header="E-mail cím" 
                                     Binding="{Binding Email, Mode=OneWay}" Width="*" CanUserResize="False"/>
+                
+                <DataGridTextColumn Header="Külföldi"
+                                    Binding="{Binding ForeignDisplay, Mode=OneWay}" IsReadOnly="True" Width="80" CanUserResize="False"/>
                                     
                 <DataGridTextColumn Header="Jelentkezés ideje" 
                                     Binding="{Binding AssignedDate, Mode=OneWay, StringFormat='yyyy. MM. dd'}" Width="*" CanUserResize="False"/>

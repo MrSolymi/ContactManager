@@ -20,6 +20,8 @@ public class MainWindowViewModel : INotifyPropertyChanged
     public RelayCommand MarkNotPublishedCommand { get; }
     public RelayCommand MarkNotHiredCommand { get; }
     
+    public RelayCommand ToggleForeignCommand { get; }
+    
     public ObservableCollection<Contact> AllContacts { get; } = new();
     public ObservableCollection<Contact> FilteredContacts { get; } = new();
     public ObservableCollection<Contact> SelectedContacts { get; } = new();
@@ -147,6 +149,19 @@ public class MainWindowViewModel : INotifyPropertyChanged
             ApplyFilters();
         }
     }
+    
+    private bool _onlyForeign;
+    public bool OnlyForeign
+    {
+        get => _onlyForeign;
+        set
+        {
+            if (_onlyForeign == value) return;
+            _onlyForeign = value;
+            OnPropertyChanged(nameof(OnlyForeign));
+            ApplyFilters();
+        }
+    }
 
     private ICollectionView _view;
     
@@ -164,6 +179,8 @@ public class MainWindowViewModel : INotifyPropertyChanged
         MarkHiredCommand = new RelayCommand(ExecuteMarkHired, CanExecuteMarkHired);
         MarkNotPublishedCommand = new RelayCommand(ExecuteMarkNotPublished, CanExecuteMarkNotPublished);
         MarkNotHiredCommand = new RelayCommand(ExecuteMarkNotHired, CanExecuteMarkNotHired);
+        
+        ToggleForeignCommand = new RelayCommand(ExecuteToggleForeign, CanExecuteToggleForeign);
             
         SelectedContacts.CollectionChanged += (_, e) =>
         {
@@ -221,10 +238,12 @@ public class MainWindowViewModel : INotifyPropertyChanged
             !c.Email.Contains(EmailFilter, StringComparison.OrdinalIgnoreCase))
             return false;
 
-        if (DateFrom.HasValue && c.AssignedDate < DateFrom.Value) return false;
-        if (DateTo.HasValue && c.AssignedDate > DateTo.Value) return false;
+        if (DateFrom.HasValue && c.AssignedDate.Date < DateFrom.Value.Date) return false;
+        if (DateTo.HasValue && c.AssignedDate.Date > DateTo.Value.Date) return false;
 
         if (OnlyUnreviewed && !(c.Published == null || c.Hired == null)) return false;
+        
+        if (OnlyForeign && !c.IsForeign) return false;
 
         return true;
     }
@@ -244,6 +263,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
         MarkNotHiredCommand.RaiseCanExecuteChanged();
         
         CopySelectedEmailsCommand.RaiseCanExecuteChanged();
+        ToggleForeignCommand.RaiseCanExecuteChanged();
     }
     
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -417,6 +437,11 @@ public class MainWindowViewModel : INotifyPropertyChanged
     {
         return SelectedContacts.Count != 0;
     }
+
+    private bool CanExecuteToggleForeign()
+    {
+        return SelectedContacts.Count == 1;
+    }
     
     private bool CanExecuteMarkPublished()
     {
@@ -455,6 +480,31 @@ public class MainWindowViewModel : INotifyPropertyChanged
         Clipboard.SetText(selectedContactsEmails);
 
         Console.WriteLine("Copied to clipboard: " + selectedContactsEmails);
+    }
+
+    private void ExecuteToggleForeign()
+    {
+        var selected = SelectedContacts.ToList();
+        
+        if (selected.Count != 1) return;
+        
+        using var db = new DatabaseContext("contacts.db");
+        
+        foreach (var contact in selected)
+        {
+            var tracked = db.Contacts.FirstOrDefault(c => c.Id == contact.Id);
+            if (tracked != null)
+            {
+                tracked.IsForeign = !tracked.IsForeign;
+            }
+        }
+        
+        db.SaveChanges();
+        
+        foreach (var contact in FilteredContacts.Where(f => selected.Any(s => s.Id == f.Id)))
+            contact.IsForeign = !contact.IsForeign;
+        
+        ApplyFilters();
     }
     
     private void ExecuteMarkPublished()

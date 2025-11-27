@@ -18,6 +18,22 @@ public class Contact : INotifyPropertyChanged
 
     public DateTime DateCreated { get; private set; }
     public DateTime AssignedDate { get; private set; }
+    
+    private bool _isForeign;
+    public bool IsForeign
+    {
+        get => _isForeign;
+        set
+        {
+            if (_isForeign == value) return;
+            _isForeign = value;
+            OnPropertyChanged(nameof(IsForeign));
+            OnPropertyChanged(nameof(ForeignDisplay));
+        }
+    }
+
+    [NotMapped]
+    public string ForeignDisplay => IsForeign ? "külföldi" : "";
 
     private bool? _published;
     public bool? Published
@@ -59,6 +75,7 @@ public class Contact : INotifyPropertyChanged
         AssignedDate = assignedDate;
         Published = null;
         Hired = null;
+        IsForeign = false;
     }
 
     private Contact()

@@ -25,6 +25,8 @@ public class DatabaseContext(string dbPath) : DbContext
         modelBuilder.Entity<Contact>().Property(c => c.Email).IsRequired();
         modelBuilder.Entity<Contact>().Property(c => c.Phone).IsRequired();
         modelBuilder.Entity<Contact>().Property(c => c.AssignedDate).IsRequired();
+        
+        modelBuilder.Entity<Contact>().Property(c => c.IsForeign).HasDefaultValue(false);
 
         modelBuilder.Entity<Contact>()
             .HasIndex(c => new { c.Name, c.Email, c.Phone })
