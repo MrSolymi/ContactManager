@@ -456,12 +456,13 @@ public class MainWindowViewModel : INotifyPropertyChanged
 
     private bool CanExecuteToggleForeign()
     {
-        return SelectedContacts.Count == 1;
+        var s = BulkStateHelper.GetBulkState(SelectedContacts, c => c.IsForeign);
+        return s != BulkState.Mixed;
     }
 
     private bool CanExecuteDeleteContacts()
     {
-        return SelectedContacts.Count == 1;
+        return SelectedContacts.Count != 0;
     }
     
     private bool CanExecuteMarkPublished()
@@ -507,7 +508,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
     {
         var selected = SelectedContacts.ToList();
         
-        if (selected.Count != 1) return;
+        if (selected.Count == 0) return;
         
         using var db = new DatabaseContext("contacts.db");
         
